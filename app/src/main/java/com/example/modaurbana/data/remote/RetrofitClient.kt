@@ -1,7 +1,7 @@
 package com.example.modaurbana.data.remote
 
 import android.content.Context
-import com.tuempresa.tuapp.data.local.SessionManager
+import com.example.modaurbana.data.local.SessionManager
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
