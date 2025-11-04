@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // ⚠️ CAMBIA ESTA URL POR LA DE TU API
-    private const val BASE_URL = "https://dummyjson.com/"
+    private const val BASE_URL = "https://x8ki-letl-twmt.n7.xano.io/api:Rfm_61dW"
 
     /**
      * Inicializa Retrofit con el contexto de la app
