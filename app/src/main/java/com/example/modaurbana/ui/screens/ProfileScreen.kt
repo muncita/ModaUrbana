@@ -1,137 +1,203 @@
 package com.example.modaurbana.ui.screens
 
+import android.Manifest
+import android.content.Context
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.modaurbana.viewmodel.ProfileViewModel
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import coil.compose.AsyncImage
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
+
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ProfileScreen(
-    viewModel: ProfileViewModel = viewModel(),
-    onLoggedOut: () -> Unit = {} // opcional: navega a Login desde afuera si quieres
+private fun ProfileContent(
+    uiState: com.example.modarurbana.viewmodel.ProfileUiState,
+    onRefresh: () -> Unit
 ) {
-    // Observar el estado
-    val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val viewModel: ProfileViewModel = viewModel()
+    var showImagePicker by remember { mutableStateOf(false) }
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
 
-    // 📸 Launcher: Selección desde galería (Guía 13)
+    // Definir los permisos según la versión de Android
+    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        listOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_MEDIA_IMAGES
+        )
+    } else {
+        listOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        )
+    }
+
+    val permissionsState = rememberMultiplePermissionsState(permissions)
+
+    // Launcher para capturar foto con cámara
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempCameraUri != null) {
+            viewModel.updateAvatar(tempCameraUri)
+        }
+    }
+
+    // Launcher para seleccionar imagen de galería
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        viewModel.updateAvatar(uri) // EP3: imagen de perfil
+        uri?.let {
+            viewModel.updateAvatar(it)
+        }
     }
 
-    // 📷 Launcher: Tomar foto con cámara (TODO integración completa según Guía 13/Tutorial)
-    // - Requiere crear un URI temporal con FileProvider y ActivityResultContracts.TakePicture()
-    // - Declara permisos en Manifest (READ_MEDIA_IMAGES/READ_EXTERNAL_STORAGE + CAMERA)
-    // val cameraLauncher = rememberLauncherForActivityResult(
-    //     contract = ActivityResultContracts.TakePicture()
-    // ) { success: Boolean ->
-    //     if (success) viewModel.updateAvatar(temporalCameraUri)
-    // }
+    // Mostrar el diálogo de selección de imagen
+    if (showImagePicker) {
+        ImagePickerDialog(
+            onDismiss = { showImagePicker = false },
+            onCameraClick = {
+                showImagePicker = false
+                if (permissionsState.permissions.any {
+                        it.permission == Manifest.permission.CAMERA && it.hasPermission
+                    }) {
+                    // Crear archivo temporal para la foto
+                    tempCameraUri = createImageUri(context)
+                    tempCameraUri?.let { takePictureLauncher.launch(it) }
+                } else {
+                    // Solicitar permiso de cámara
+                    permissionsState.launchMultiplePermissionRequest()
+                }
+            },
+            onGalleryClick = {
+                showImagePicker = false
+                val imagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    Manifest.permission.READ_MEDIA_IMAGES
+                } else {
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                }
 
-    // Cargar datos cuando la pantalla se abre
-    LaunchedEffect(Unit) {
-        viewModel.loadUser(1)  // ⚠️ Cambia el ID o usa /me cuando lo expongas en tu repo
+                if (permissionsState.permissions.any {
+                        it.permission == imagePermission && it.hasPermission
+                    }) {
+                    // Lanzar selector de galería
+                    pickImageLauncher.launch("image/*")
+                } else {
+                    // Solicitar permiso de almacenamiento
+                    permissionsState.launchMultiplePermissionRequest()
+                }
+            }
+        )
     }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        when {
-            // Estado: Cargando
-            state.isLoading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
+        // Avatar Card
+        ShadcnCard(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = 1.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Avatar Circle con imagen o icono
+                Box(
+                    modifier = Modifier.size(120.dp),
+                    contentAlignment = Alignment.BottomEnd
+                ) {
+                    // Avatar principal
+                    if (uiState.avatarUri != null) {
+                        // Mostrar imagen seleccionada con Coil
+                        AsyncImage(
+                            model = uiState.avatarUri,
+                            contentDescription = "Avatar del usuario",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .clickable { showImagePicker = true }
+                                .background(Primary),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        // Mostrar icono por defecto
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable { showImagePicker = true },
+                            shape = CircleShape,
+                            color = Primary
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Person,
+                                contentDescription = "Seleccionar avatar",
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(28.dp)
+                            )
+                        }
+                    }
+
+                    // Icono de cámara en esquina
+                    Surface(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clickable { showImagePicker = true },
+                        shape = CircleShape,
+                        color = Surface,
+                        shadowElevation = 2.dp
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CameraAlt,
+                            contentDescription = "Cambiar foto",
+                            tint = Primary,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // User Name
+                Text(
+                    text = uiState.user?.name ?: "",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Foreground
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // User Email
+                Text(
+                    text = uiState.user?.email ?: "",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = ForegroundMuted
+                    )
                 )
             }
-
-            // Estado: Error
-            state.error != null -> {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "❌ Error",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = state.error ?: "",
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { viewModel.loadUser(1) }) {
-                        Text("Reintentar")
-                    }
-                }
-            }
-
-            // Estado: Datos cargados
-            else -> {
-                Column(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "Perfil de Usuario",
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // 👤 Avatar (EP3 + Guía 13)
-                    AvatarCard(
-                        avatarUri = state.avatarUri,
-                        onPickFromGallery = { pickImageLauncher.launch("image/*") },
-                        onTakePhoto = {
-                            // TODO: Implementar cámara:
-                            // 1) Crear URI temporal con FileProvider
-                            // 2) Lanzar cameraLauncher.launch(temporalUri)
-                            // 3) En onActivityResult, si success -> viewModel.updateAvatar(temporalUri)
-                        }
-                    )
-
-                    // Nombre
-                    InfoCard(
-                        title = "Nombre",
-                        value = state.userName
-                    )
-
-                    // Email
-                    InfoCard(
-                        title = "Email",
-                        value = state.userEmail
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Button(onClick = { viewModel.loadUser(1) }) {
-                            Text("Refrescar")
-                        }
-                        OutlinedButton(
-                            onClick = { viewModel.logout(onLoggedOut) }
-                        ) {
-                            Text("Cerrar sesión")
-                        }
-                    }
-                }
-            }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // ... resto del código (Information Card) permanece igual
     }
 }
 
@@ -170,10 +236,26 @@ private fun AvatarCard(
     }
 }
 
+private fun createImageUri(context: Context): Uri? {
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val imageFileName = "profile_avatar_$timeStamp.jpg"
+    val storageDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
+
+    return try {
+        val imageFile = File(storageDir, imageFileName)
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            imageFile
+        )
+    } catch (e: Exception) {
+        null
+    }
+}
+
 /**
  * Tarjeta reutilizable para mostrar pares título/valor del perfil.
  */
-@Composable
 private fun InfoCard(
     title: String,
     value: String

@@ -11,16 +11,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+
+
 /**
  * Estado de la UI (EP3: /me + imagen de perfil almacenada localmente)
  * Guía 12: gestión de estados; Guía 13: cámara/galería -> Uri del avatar.
  */
 data class ProfileUiState(
-    val isLoading: Boolean = false,
-    val userName: String = "",
-    val userEmail: String = "",
-    val avatarUri: Uri? = null,   // ✨ Nuevo: para mostrar avatar (galería/cámara)
-    val error: String? = null
+    val isLoading: Boolean = true,
+    val user: User? = null,
+    val error: String? = null,
+    val formattedCreatedAt: String = "",
+    val avatarUri: Uri? = null  // ✨ Nuevo campo
 )
 
 /**
