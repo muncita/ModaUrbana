@@ -2,7 +2,7 @@ package com.example.modaurbana.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.modaurbana.repository.AuthRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -14,35 +14,38 @@ data class AuthUiState(
 )
 
 /**
- * Manejo de estados de carga/éxito/error (Guía 12) y validaciones (Guía 11).
- * No pegamos lógicas completas para evaluación: coloca tus reglas en los TODO.
+ * Stub mínimo para compilar y probar pantallas.
+ * Luego lo conectamos a tu repositorio/ApiService (login y /me).
  */
-class AuthViewModel(private val repo: AuthRepository) : ViewModel() {
+class AuthViewModel : ViewModel() {
 
     private val _ui = MutableStateFlow(AuthUiState())
     val ui: StateFlow<AuthUiState> = _ui
 
     fun login(username: String, password: String) {
-        // TODO: Validaciones campo a campo (Guía 11): requerido, formato, mensajes específicos.
+        // TODO: Reemplazar por repo.login(...) y manejo real de errores
         viewModelScope.launch {
             _ui.value = AuthUiState(isLoading = true)
-            val r = repo.login(username, password)
-            _ui.value = r.fold(
-                onSuccess = { AuthUiState(success = true) },
-                onFailure = { AuthUiState(error = it.message ?: "Error de autenticación") }
-            )
+            // Simulación breve de red
+            delay(600)
+            if (username.isBlank() || password.length < 4) {
+                _ui.value = AuthUiState(error = "Credenciales inválidas")
+            } else {
+                _ui.value = AuthUiState(success = true)
+            }
         }
     }
 
     fun register(username: String, email: String, password: String) {
-        // TODO: Validaciones con reglas de Guía 11 (correo válido, contraseña, etc.)
+        // TODO: Reemplazar por repo.register(...) si tu API lo soporta
         viewModelScope.launch {
             _ui.value = AuthUiState(isLoading = true)
-            val r = repo.register(username, password, email)
-            _ui.value = r.fold(
-                onSuccess = { AuthUiState(success = true) },
-                onFailure = { AuthUiState(error = it.message ?: "Error al registrar") }
-            )
+            delay(600)
+            if (username.isBlank() || !email.contains("@") || password.length < 6) {
+                _ui.value = AuthUiState(error = "Revisa los campos del formulario")
+            } else {
+                _ui.value = AuthUiState(success = true)
+            }
         }
     }
 }

@@ -1,5 +1,8 @@
 package com.example.modaurbana.ui.screens
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.modaurbana.viewmodel.AuthUiState
+import com.example.modaurbana.viewmodel.AuthViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -7,53 +10,74 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.modaurbana.ui.navigation.Route
-import com.example.modaurbana.viewmodel.AuthUiState
-import com.example.modaurbana.viewmodel.AuthViewModel
 
-/**
- * Formulario con validaciones (requeridos, formato), bloquea envío inválido,
- * muestra mensajes por campo (Guía 11) y estados de carga/éxito/error (Guía 12).
- * COMPLETA las validaciones en el ViewModel y vincula isError/supportingText aquí.
- */
 @Composable
-fun LoginScreen(navController: NavController, vm: AuthViewModel = viewModel()) {
+fun LoginScreen(
+    navController: NavController,
+    vm: AuthViewModel = viewModel()
+)  {
     val ui: AuthUiState by vm.ui.collectAsState()
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // TODO: derivedStateOf para habilitar botón solo si campos válidos (Guía 12)
+    // Habilita el botón solo si pasa validación mínima (puedes reforzar en el VM)
+    val canSend by remember(username, password) {
+        mutableStateOf(username.isNotBlank() && password.length >= 4)
+    }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text("Iniciar Sesión", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(16.dp))
 
-        OutlinedTextField(value = username, onValueChange = { username = it },
-            label = { Text("Usuario") } /* TODO: isError + supportingText con mensaje específico (Guía 11) */)
+        OutlinedTextField(
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Usuario") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
 
-        OutlinedTextField(value = password, onValueChange = { password = it },
-            label = { Text("Contraseña") }, visualTransformation = PasswordVisualTransformation()
-            /* TODO: isError + supportingText */)
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         if (ui.error != null) {
             Spacer(Modifier.height(8.dp))
-            Text(ui.error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            Text(
+                ui.error!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
         }
 
         Spacer(Modifier.height(16.dp))
+
         Button(
             onClick = { vm.login(username, password) },
-            enabled = !ui.isLoading /* && campos válidos */
+            enabled = canSend && !ui.isLoading,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            if (ui.isLoading) CircularProgressIndicator(modifier = Modifier.size(18.dp))
-            else Text("Entrar")
+            if (ui.isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp))
+            } else {
+                Text("Entrar")
+            }
         }
 
         TextButton(onClick = { navController.navigate(Route.Register.path) }) {
@@ -61,8 +85,7 @@ fun LoginScreen(navController: NavController, vm: AuthViewModel = viewModel()) {
         }
 
         if (ui.success) {
-            // Navega a Perfil y limpia backstack (Guía 10 + EP3 back correcto)
-            LaunchedEffect(true) {
+            LaunchedEffect(Unit) {
                 navController.navigate(Route.Profile.path) {
                     popUpTo(Route.Login.path) { inclusive = true }
                 }
