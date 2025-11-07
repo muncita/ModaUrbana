@@ -1,36 +1,29 @@
 package com.example.modaurbana.repository
 
-
+import android.content.Context
 import com.example.modaurbana.data.remote.ApiService
 import com.example.modaurbana.data.remote.RetrofitClient
 import com.example.modaurbana.data.remote.dto.UserDto
-/**
- * Repository: Abstrae la fuente de datos
- * El ViewModel NO sabe si los datos vienen de API, base de datos local, etc.
- */
+
 class UserRepository(context: Context) {
 
-    // Crear la instancia del API Service (pasando el contexto)
     private val apiService: ApiService = RetrofitClient
         .create(context)
         .create(ApiService::class.java)
 
-    /**
-     * Obtiene un usuario de la API
-     *
-     * Usa Result<T> para manejar éxito/error de forma elegante
-     */
-    suspend fun fetchUser(id: Int = 1): Result<UserDto> {
-        return try {
-            // Llamar a la API (esto puede tardar varios segundos)
-            val user = apiService.getUser(id)
-
-            // Retornar éxito
-            Result.success(user)
-
-        } catch (e: Exception) {
-            // Si algo falla (sin internet, timeout, etc.)
-            Result.failure(e)
-        }
+    // EP3 recomienda /me; mientras lo conectas, mantenemos fallback a ID
+    suspend fun fetchUser(id: Int = 1): Result<UserDto> = try {
+        val user = apiService.getUserById(id)
+        Result.success(user)
+    } catch (e: Exception) {
+        Result.failure(e)
     }
+
+    // Cuando tengas /me funcional, usa esto:
+    // suspend fun fetchMe(): Result<UserDto> = try {
+    //     val me = apiService.getCurrentUser()
+    //     Result.success(me)
+    // } catch (e: Exception) {
+    //     Result.failure(e)
+    // }
 }
