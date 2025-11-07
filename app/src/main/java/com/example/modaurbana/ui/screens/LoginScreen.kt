@@ -10,23 +10,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.modaurbana.ui.navigation.Route
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import android.app.Application
 
 @Composable
-fun LoginScreen(
-    navController: NavController,
-    vm: AuthViewModel = viewModel()
-)  {
-    val ui: AuthUiState by vm.ui.collectAsState()
+fun LoginScreen(navController: NavController, vm: AuthViewModel = viewModel(factory = viewModelFactory {
+        initializer { AuthViewModel(Application()) }
+    })) {
+    val ui: AuthUiState by vm.ui.collectAsStateWithLifecycle()
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Habilita el botón solo si pasa validación mínima (puedes reforzar en el VM)
-    val canSend by remember(username, password) {
-        mutableStateOf(username.isNotBlank() && password.length >= 4)
-    }
+    val canSend = username.isNotBlank() && password.length >= 4
 
     Column(
         modifier = Modifier
@@ -73,11 +73,8 @@ fun LoginScreen(
             enabled = canSend && !ui.isLoading,
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (ui.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(18.dp))
-            } else {
-                Text("Entrar")
-            }
+            if (ui.isLoading) CircularProgressIndicator(modifier = Modifier.size(18.dp))
+            else Text("Entrar")
         }
 
         TextButton(onClick = { navController.navigate(Route.Register.path) }) {

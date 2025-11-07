@@ -7,87 +7,115 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.modaurbana.ui.navigation.Route
-import com.example.modaurbana.viewmodel.AuthUiState
 import com.example.modaurbana.viewmodel.AuthViewModel
+import com.example.modaurbana.viewmodel.AuthUiState
 
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     navController: NavController,
     vm: AuthViewModel = viewModel()
 ) {
-    val ui: AuthUiState by vm.ui.collectAsState()
+    val ui: AuthUiState by vm.ui.collectAsStateWithLifecycle()
 
     var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
 
-    // Habilita el botón solo si pasa validación mínima (puedes reforzar en el VM)
-    val canSend by remember(username, password) {
-        mutableStateOf(username.isNotBlank() && password.length >= 4)
-    }
+    val isFormValid = username.isNotBlank() &&
+            email.contains("@") &&
+            password.length >= 4 &&
+            password == confirmPassword
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        contentAlignment = Alignment.Center
     ) {
-        Text("Iniciar Sesión", style = MaterialTheme.typography.headlineMedium)
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Usuario") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (ui.error != null) {
-            Spacer(Modifier.height(8.dp))
-            Text(
-                ui.error!!,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Button(
-            onClick = { vm.login(username, password) },
-            enabled = canSend && !ui.isLoading,
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (ui.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(18.dp))
-            } else {
-                Text("Entrar")
+            Text(
+                text = "Crear cuenta",
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Nombre de usuario") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Correo electrónico") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Contraseña") },
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirmar contraseña") },
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (ui.error != null) {
+                Text(
+                    ui.error!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
-        }
 
-        TextButton(onClick = { navController.navigate(Route.Register.path) }) {
-            Text("¿No tienes cuenta? Regístrate")
-        }
+            Button(
+                onClick = {
+                    vm.register(username, email, password)
+                },
+                enabled = isFormValid && !ui.isLoading,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (ui.isLoading)
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp))
+                else
+                    Text("Registrar")
+            }
 
-        if (ui.success) {
-            LaunchedEffect(Unit) {
-                navController.navigate(Route.Profile.path) {
-                    popUpTo(Route.Login.path) { inclusive = true }
+            TextButton(onClick = {
+                navController.navigate(Route.Login.path) {
+                    popUpTo(Route.Register.path) { inclusive = true }
+                }
+            }) {
+                Text("¿Ya tienes una cuenta? Inicia sesión")
+            }
+
+            // Cuando el registro sea exitoso (en el futuro)
+            if (ui.success) {
+                LaunchedEffect(Unit) {
+                    navController.navigate(Route.Login.path) {
+                        popUpTo(Route.Register.path) { inclusive = true }
+                    }
                 }
             }
         }

@@ -31,7 +31,7 @@ class AuthRepository(
 
     suspend fun me(): Result<UserDto> {
         return try {
-            Result.success(api.me())
+            Result.success(api.getCurrentUser())
         } catch (e: Exception) {
             Result.failure(e)
         }
