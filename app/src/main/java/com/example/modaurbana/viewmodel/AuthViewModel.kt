@@ -1,87 +1,100 @@
 package com.example.modaurbana.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.modaurbana.data.local.SessionManager
-import com.example.modaurbana.data.remote.ApiService
-import com.example.modaurbana.data.remote.RetrofitClient
+import com.example.modaurbana.models.User
 import com.example.modaurbana.repository.AuthRepository
+import com.example.modaurbana.utils.ValidationUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-/**
- * Estado de la UI del login/registro.
- */
 data class AuthUiState(
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val success: Boolean = false
+    val name: String = "",
+    val email: String = "",
+    val password: String = "",
+    val confirm: String = "",
+
+    val nameError: String? = null,
+    val emailError: String? = null,
+    val passError: String? = null,
+    val confirmError: String? = null,
+
+    val loading: Boolean = false,
+    val errorMessage: String? = null,
+    val loggedUser: User? = null
 )
 
-/**
- * ViewModel central de autenticación.
- * Controla tanto el login como el registro (dummy o real).
- */
-class AuthViewModel : ViewModel() {
+class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
-    // Inicializa Retrofit y SessionManager
-    private val retrofit = RetrofitClient.create()
-    private val api = retrofit.create(ApiService::class.java)
-    private val sessionManager = SessionManager(RetrofitClient.Context)
-    private val repository = AuthRepository(api, sessionManager)
+    private val session = SessionManager(app.applicationContext)
+    private val repo = AuthRepository(session)
 
-    // Estado privado y público
     private val _ui = MutableStateFlow(AuthUiState())
     val ui: StateFlow<AuthUiState> = _ui
 
-    /**
-     * Inicia sesión con la API (usa AuthRepository → /auth/login)
-     */
-    fun login(username: String, password: String) {
+    init {
+        // Si hay token, intentamos obtener perfil
         viewModelScope.launch {
-            _ui.value = AuthUiState(isLoading = true)
-
-            val result = repository.login(username, password)
-            _ui.value = result.fold(
-                onSuccess = {
-                    AuthUiState(success = true)
-                },
-                onFailure = { e ->
-                    AuthUiState(error = e.localizedMessage ?: "Error al iniciar sesión")
-                }
-            )
+            runCatching { repo.me() }
+                .onSuccess { user -> _ui.value = _ui.value.copy(loggedUser = user) }
+                .onFailure { /* No logged in, ignore */ }
         }
     }
 
-    /**
-     * Simula o conecta un registro real con Xano.
-     * Puedes reemplazar con repository.register() si tienes el endpoint.
-     */
-    fun register(username: String, email: String, password: String) {
+    fun onName(s: String) { _ui.value = _ui.value.copy(name = s, nameError = null) }
+    fun onEmail(s: String) { _ui.value = _ui.value.copy(email = s, emailError = null) }
+    fun onPass(s: String) { _ui.value = _ui.value.copy(password = s, passError = null) }
+    fun onConfirm(s: String) { _ui.value = _ui.value.copy(confirm = s, confirmError = null) }
+
+    private fun validateRegister(): Boolean {
+        var ok = true
+        var st = _ui.value
+
+        if (!ValidationUtils.isNotBlank(st.name)) { st = st.copy(nameError = "Nombre requerido"); ok = false }
+        if (!ValidationUtils.isValidEmail(st.email)) { st = st.copy(emailError = "Email inválido"); ok = false }
+        if (!ValidationUtils.isValidPassword(st.password)) { st = st.copy(passError = "Mínimo 6 caracteres"); ok = false }
+        if (st.password != st.confirm) { st = st.copy(confirmError = "Las contraseñas no coinciden"); ok = false }
+
+        _ui.value = st
+        return ok
+    }
+
+    private fun validateLogin(): Boolean {
+        var ok = true
+        var st = _ui.value
+
+        if (!ValidationUtils.isValidEmail(st.email)) { st = st.copy(emailError = "Email inválido"); ok = false }
+        if (!ValidationUtils.isValidPassword(st.password)) { st = st.copy(passError = "Mínimo 6 caracteres"); ok = false }
+
+        _ui.value = st
+        return ok
+    }
+
+    fun doRegister(onSuccess: () -> Unit) {
+        if (!validateRegister()) return
         viewModelScope.launch {
-            _ui.value = AuthUiState(isLoading = true)
-
-            try {
-                // ⚙️ Aquí podrías conectar con tu endpoint real de registro
-                // val result = repository.register(username, email, password)
-
-                kotlinx.coroutines.delay(1200) // Simulación de red
-                _ui.value = AuthUiState(success = true)
-
-            } catch (e: Exception) {
-                _ui.value = AuthUiState(
-                    isLoading = false,
-                    error = e.localizedMessage ?: "Error al registrar usuario"
-                )
-            }
+            _ui.value = _ui.value.copy(loading = true, errorMessage = null)
+            runCatching { repo.register(_ui.value.name, _ui.value.email, _ui.value.password) }
+                .onSuccess { user -> _ui.value = _ui.value.copy(loading = false, loggedUser = user); onSuccess() }
+                .onFailure { e -> _ui.value = _ui.value.copy(loading = false, errorMessage = e.message) }
         }
     }
 
-    /**
-     * Limpia el estado de la UI (por ejemplo, al cambiar de pantalla).
-     */
-    fun resetState() {
-        _ui.value = AuthUiState()
+    fun doLogin(onSuccess: () -> Unit) {
+        if (!validateLogin()) return
+        viewModelScope.launch {
+            _ui.value = _ui.value.copy(loading = true, errorMessage = null)
+            runCatching { repo.login(_ui.value.email, _ui.value.password) }
+                .onSuccess { user -> _ui.value = _ui.value.copy(loading = false, loggedUser = user); onSuccess() }
+                .onFailure { e -> _ui.value = _ui.value.copy(loading = false, errorMessage = e.message) }
+        }
     }
+    fun doLogout() {
+        viewModelScope.launch { repo.logout() }
+        _ui.value = AuthUiState() // limpiar estado
+    }
+
 }

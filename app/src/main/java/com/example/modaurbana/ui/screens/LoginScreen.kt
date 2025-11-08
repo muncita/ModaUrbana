@@ -1,92 +1,53 @@
 package com.example.modaurbana.ui.screens
 
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.modaurbana.viewmodel.AuthUiState
-import com.example.modaurbana.viewmodel.AuthViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.modaurbana.ui.navigation.Route
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import android.app.Application
+import com.example.modaurbana.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(navController: NavController, vm: AuthViewModel = viewModel(factory = viewModelFactory {
-        initializer { AuthViewModel(Application()) }
-    })) {
-    val ui: AuthUiState by vm.ui.collectAsStateWithLifecycle()
+fun LoginScreen(nav: NavHostController, vm: AuthViewModel = viewModel()) {
+    val ui by vm.ui.collectAsState()
 
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
-    val canSend = username.isNotBlank() && password.length >= 4
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Iniciar Sesión", style = MaterialTheme.typography.headlineMedium)
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Usuario") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (ui.error != null) {
-            Spacer(Modifier.height(8.dp))
-            Text(
-                ui.error!!,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Button(
-            onClick = { vm.login(username, password) },
-            enabled = canSend && !ui.isLoading,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (ui.isLoading) CircularProgressIndicator(modifier = Modifier.size(18.dp))
-            else Text("Entrar")
-        }
-
-        TextButton(onClick = { navController.navigate(Route.Register.path) }) {
-            Text("¿No tienes cuenta? Regístrate")
-        }
-
-        if (ui.success) {
-            LaunchedEffect(Unit) {
-                navController.navigate(Route.Profile.path) {
-                    popUpTo(Route.Login.path) { inclusive = true }
-                }
+    // Si ya hay sesión, navega a perfil
+    LaunchedEffect(ui.loggedUser) {
+        if (ui.loggedUser != null) {
+            nav.navigate(Route.Home.route) {
+                popUpTo(Route.Login.route) { inclusive = true }
             }
         }
+    }
+
+
+    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Iniciar sesión", style = MaterialTheme.typography.headlineSmall)
+        OutlinedTextField(
+            value = ui.email, onValueChange = vm::onEmail, label = { Text("Email") },
+            isError = ui.emailError != null, supportingText = { ui.emailError?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = ui.password, onValueChange = vm::onPass, label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            isError = ui.passError != null, supportingText = { ui.passError?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        if (ui.errorMessage != null) Text(ui.errorMessage!!, color = MaterialTheme.colorScheme.error)
+
+        Button(
+            onClick = { vm.doLogin { /* navegación en LaunchedEffect */ } },
+            enabled = !ui.loading,
+            modifier = Modifier.fillMaxWidth()
+        ) { if (ui.loading) CircularProgressIndicator(strokeWidth = 2.dp) else Text("Ingresar") }
+
+        TextButton(onClick = { nav.navigate(Route.Register.route) }) { Text("Crear cuenta") }
     }
 }

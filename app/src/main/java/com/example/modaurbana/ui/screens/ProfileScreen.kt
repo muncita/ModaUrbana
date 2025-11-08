@@ -1,77 +1,113 @@
 package com.example.modaurbana.ui.screens
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.modaurbana.viewmodel.AuthViewModel
 import com.example.modaurbana.viewmodel.ProfileViewModel
-import com.example.modaurbana.ui.components.ImagenInteligente
-import com.example.modaurbana.ui.components.ImagePickerDialog
+import java.io.File
 
 @Composable
 fun ProfileScreen(
-    viewModel: ProfileViewModel = viewModel(),
-    onLoggedOut: () -> Unit = {}
+    vm: AuthViewModel = viewModel(),
+    pvm: ProfileViewModel = viewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
-    var showDialog by remember { mutableStateOf(false) }
+    val ui by vm.ui.collectAsState()
+    val avatar by pvm.avatarUri.collectAsState()
 
-    val pickImageLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? -> viewModel.updateAvatar(uri) }
+    val ctx = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        viewModel.loadUser()
+    var cameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Galería
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let { pvm.setAvatar(it.toString()) }
     }
 
-    Box(Modifier.fillMaxSize().padding(16.dp)) {
-        when {
-            state.isLoading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-            state.error != null -> Text(state.error ?: "Error", color = MaterialTheme.colorScheme.error)
-            else -> Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text("Perfil de Usuario", style = MaterialTheme.typography.headlineMedium)
-                ImagenInteligente(uri = state.avatarUri) { showDialog = true }
+    // Cámara
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { ok ->
+        if (ok) cameraUri?.let { pvm.setAvatar(it.toString()) }
+    }
 
-                InfoCard("Nombre", state.userName)
-                InfoCard("Email", state.userEmail)
-
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(onClick = { viewModel.loadUser() }) { Text("Refrescar") }
-                    OutlinedButton(onClick = { viewModel.logout(onLoggedOut) }) { Text("Cerrar sesión") }
-                }
-            }
+    // Permiso cámara
+    val requestCameraPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val (uri, _) = createImageUri(ctx)
+            cameraUri = uri
+            cameraLauncher.launch(uri)
         }
     }
 
-    if (showDialog) {
-        ImagePickerDialog(
-            onDismiss = { showDialog = false },
-            onCameraClick = { /* TODO: cámara */ showDialog = false },
-            onGalleryClick = { pickImageLauncher.launch("image/*"); showDialog = false }
-        )
+    Column(
+        Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("Perfil", style = MaterialTheme.typography.headlineSmall)
+        Text(ui.loggedUser?.email ?: "Email no disponible")
+
+        if (avatar.isNotEmpty()) {
+            AsyncImage(
+                model = avatar,
+                contentDescription = "Avatar",
+                modifier = Modifier.size(128.dp)
+            )
+        } else {
+            Text("Sin imagen de perfil")
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Button(onClick = {
+                galleryLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }) { Text("Desde Galería") }
+
+            Button(onClick = {
+                val status = ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA)
+                if (status == PackageManager.PERMISSION_GRANTED) {
+                    val (uri, _) = createImageUri(ctx)
+                    cameraUri = uri
+                    cameraLauncher.launch(uri)
+                } else {
+                    requestCameraPermission.launch(Manifest.permission.CAMERA)
+                }
+            }) { Text("Tomar Foto") }
+        }
     }
 }
 
-@Composable
-private fun InfoCard(title: String, value: String) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(text = value, style = MaterialTheme.typography.bodyLarge)
-        }
-    }
+/** Crea un archivo temporal y devuelve su Uri (FileProvider) + el File */
+private fun createImageUri(context: Context): Pair<Uri, File> {
+    val imagesDir = File(context.cacheDir, "images").apply { if (!exists()) mkdirs() }
+    val file = File.createTempFile("avatar_", ".jpg", imagesDir)
+    val uri = FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        file
+    )
+    return uri to file
 }

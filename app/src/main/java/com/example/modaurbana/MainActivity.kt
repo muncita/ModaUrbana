@@ -3,46 +3,27 @@ package com.example.modaurbana
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.example.modaurbana.data.local.SessionManager
-import com.example.modaurbana.ui.navigation.AppNavigation
+import com.example.modaurbana.ui.navigation.AppNavHost
 import com.example.modaurbana.ui.navigation.Route
 import com.example.modaurbana.ui.theme.ModaUrbanaTheme
-import kotlinx.coroutines.runBlocking
+import com.example.modaurbana.viewmodel.AuthViewModel
 
-/**
- * Punto de entrada principal de la aplicación ModaUrbana.
- * Inicializa el SessionManager y decide la pantalla inicial según el token.
- */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ✅ Inicializa el contexto global de SessionManager
-        SessionManager.init(this)
-
-        enableEdgeToEdge()
         setContent {
             ModaUrbanaTheme {
                 val navController = rememberNavController()
+                val vm: AuthViewModel = viewModel()
+                val ui by vm.ui.collectAsState()
 
-                // Determina la ruta inicial según si existe un token guardado
-                var startDestination by remember { mutableStateOf(Route.Login.path) }
+                val start = if (ui.loggedUser != null) Route.Home.route else Route.Login.route
+                AppNavHost(navController = nav, startDestination = start)
 
-                LaunchedEffect(Unit) {
-                    val token = runBlocking { SessionManager(this@MainActivity).getAuthToken() }
-                    if (!token.isNullOrEmpty()) {
-                        startDestination = Route.Profile.path
-                    }
-                }
-
-                // Lanza la navegación de la app
-                AppNavigation(
-                    navController = navController,
-                    startDestination = startDestination
-                )
             }
         }
     }

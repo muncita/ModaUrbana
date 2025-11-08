@@ -1,49 +1,16 @@
 package com.example.modaurbana.data.remote
 
-import android.content.Context
-import com.example.modaurbana.data.local.SessionManager
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
+    private const val BASE_URL = "https://x8ki-letl-twmt.n7.xano.io/api:Rfm_61dW/"
 
-    // ⚠️ CAMBIA ESTA URL POR LA DE TU API
-    private const val BASE_URL = "https://x8ki-letl-twmt.n7.xano.io/api:Rfm_61dW"
-
-    /**
-     * Inicializa Retrofit con el contexto de la app
-     * Llamar desde Application o ViewModel al inicio
-     */
-    fun create(context: Context): Retrofit {
-
-        // 1️⃣ SessionManager para manejar el token
-        val sessionManager = SessionManager(context)
-
-        // 2️⃣ AuthInterceptor para inyectar el token automáticamente
-        val authInterceptor = AuthInterceptor(sessionManager)
-
-        // 3️⃣ HttpLoggingInterceptor para debugging
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY  // ⚠️ Cambiar a NONE en producción
-        }
-
-        // 4️⃣ OkHttpClient con AMBOS interceptores
-        val okHttpClient = OkHttpClient.Builder()
-            // ⚠️ ORDEN IMPORTANTE: AuthInterceptor primero, luego Logging
-            .addInterceptor(authInterceptor)    // Añade el token
-            .addInterceptor(loggingInterceptor)  // Muestra en Logcat (con token)
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .build()
-
-        // 5️⃣ Retrofit con el cliente configurado
-        return Retrofit.Builder()
+    val api: ApiService by lazy {
+        Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
-            .client(okHttpClient)
             .build()
+            .create(ApiService::class.java)
     }
 }

@@ -1,28 +1,34 @@
 package com.example.modaurbana.repository
 
-import android.content.Context
+import com.example.modaurbana.data.local.SessionManager
 import com.example.modaurbana.data.remote.ApiService
 import com.example.modaurbana.data.remote.RetrofitClient
-import com.example.modaurbana.data.remote.dto.UserDto
+import com.example.modaurbana.models.User
 
-class UserRepository(context: Context) {
+class UserRepository(
+    private val session: SessionManager,
+    private val api: ApiService = RetrofitClient.api
+) {
 
-    private val apiService: ApiService = RetrofitClient
-        .create(context)
-        .create(ApiService::class.java)
-
-    // EP3 recomienda /me; mientras lo conectas, mantenemos fallback a ID
-    suspend fun fetchUser(id: Int = 1): Result<UserDto> = try {
-        val user = apiService.getUserById(id)
-        Result.success(user)
+    /**
+     * Retorna el usuario autenticado usando /auth/me.
+     * Requiere que el token esté guardado en DataStore (lo hace AuthRepository al login/signup).
+     */
+    suspend fun fetchMe(): Result<User> = try {
+        val token = session.getAuthToken()
+        require(token.isNotEmpty()) { "No hay token de sesión" }
+        val me = api.me("Bearer $token")
+        Result.success(me)
     } catch (e: Exception) {
         Result.failure(e)
     }
 
-    // Cuando tengas /me funcional, usa esto:
-    // suspend fun fetchMe(): Result<UserDto> = try {
-    //     val me = apiService.getCurrentUser()
-    //     Result.success(me)
+    // --- (Opcional) Si tu API tuviera GET /users/{id}, puedes habilitar esto y su endpoint: ---
+    // suspend fun fetchUserById(id: Long): Result<User> = try {
+    //     val token = session.getAuthToken()
+    //     require(token.isNotEmpty()) { "No hay token de sesión" }
+    //     val user = api.getUserById(id, "Bearer $token")
+    //     Result.success(user)
     // } catch (e: Exception) {
     //     Result.failure(e)
     // }

@@ -1,18 +1,18 @@
 package com.example.modaurbana.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.modaurbana.ui.screens.LoginScreen
-import com.example.modaurbana.ui.screens.RegisterScreen
-import com.example.modaurbana.ui.screens.ProfileScreen
+import com.example.modaurbana.ui.screens.*
 
 @Composable
-fun AppNavigation(navController: NavHostController, startDestination: String) {
-    NavHost(navController = navController, startDestination = startDestination) {
-        composable(Route.Login.path)    { LoginScreen(navController) }
-        composable(Route.Register.path) { RegisterScreen(navController) }
-        composable(Route.Profile.path)  { ProfileScreen() }
+fun AppNavHost(navController: NavHostController, startDestination: String, modifier: Modifier = Modifier) {
+    NavHost(navController, startDestination, modifier) {
+        composable(Route.Login.route) { LoginScreen(navController) }
+        composable(Route.Register.route) { RegisterScreen(navController) }
+        composable(Route.Home.route) { HomeScreen(navController) }
+        composable(Route.Profile.route) { ProfileScreen() }
     }
 }

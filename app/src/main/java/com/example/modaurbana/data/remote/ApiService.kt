@@ -1,26 +1,15 @@
 package com.example.modaurbana.data.remote
 
-
-import com.example.modaurbana.data.remote.dto.*
+import com.example.modaurbana.models.*
 import retrofit2.http.*
 
 interface ApiService {
-
+    @POST("auth/signup")
+    suspend fun register(@Body body: RegisterRequest): TokenResponse
 
     @POST("auth/login")
-    suspend fun login(@Body request: LoginRequest): LoginResponse
+    suspend fun login(@Body body: LoginRequest): TokenResponse
 
-
-    @GET("user/me")
-    suspend fun getCurrentUser(): UserDto
-
-    @GET("users")
-    suspend fun getUsers(): UsersResponse
-
-
-    @GET("users/search")
-    suspend fun searchUsers(@Query("q") query: String): UsersResponse
-
-    @GET("users/{id}")
-    suspend fun getUserById(@Path("id") id: Int): UserDto
+    @GET("auth/me")
+    suspend fun me(@Header("Authorization") bearer: String): User
 }

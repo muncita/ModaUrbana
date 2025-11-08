@@ -3,121 +3,60 @@ package com.example.modaurbana.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.modaurbana.ui.navigation.Route
 import com.example.modaurbana.viewmodel.AuthViewModel
-import com.example.modaurbana.viewmodel.AuthUiState
 
 @Composable
-fun RegisterScreen(
-    navController: NavController,
-    vm: AuthViewModel = viewModel()
-) {
-    val ui: AuthUiState by vm.ui.collectAsStateWithLifecycle()
+fun RegisterScreen(nav: NavHostController, vm: AuthViewModel = viewModel()) {
+    val ui by vm.ui.collectAsState()
 
-    var username by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-
-    val isFormValid = username.isNotBlank() &&
-            email.contains("@") &&
-            password.length >= 4 &&
-            password == confirmPassword
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = "Crear cuenta",
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Nombre de usuario") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Correo electrónico") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Contraseña") },
-                visualTransformation = PasswordVisualTransformation(),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                label = { Text("Confirmar contraseña") },
-                visualTransformation = PasswordVisualTransformation(),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            if (ui.error != null) {
-                Text(
-                    ui.error!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            Button(
-                onClick = {
-                    vm.register(username, email, password)
-                },
-                enabled = isFormValid && !ui.isLoading,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (ui.isLoading)
-                    CircularProgressIndicator(modifier = Modifier.size(18.dp))
-                else
-                    Text("Registrar")
-            }
-
-            TextButton(onClick = {
-                navController.navigate(Route.Login.path) {
-                    popUpTo(Route.Register.path) { inclusive = true }
-                }
-            }) {
-                Text("¿Ya tienes una cuenta? Inicia sesión")
-            }
-
-            // Cuando el registro sea exitoso (en el futuro)
-            if (ui.success) {
-                LaunchedEffect(Unit) {
-                    navController.navigate(Route.Login.path) {
-                        popUpTo(Route.Register.path) { inclusive = true }
-                    }
-                }
+    LaunchedEffect(ui.loggedUser) {
+        if (ui.loggedUser != null) {
+            nav.navigate(Route.Home.route) {
+                popUpTo(Route.Login.route) { inclusive = true }
             }
         }
+    }
+
+
+    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Crear cuenta", style = MaterialTheme.typography.headlineSmall)
+        OutlinedTextField(
+            value = ui.name, onValueChange = vm::onName, label = { Text("Nombre") },
+            isError = ui.nameError != null, supportingText = { ui.nameError?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = ui.email, onValueChange = vm::onEmail, label = { Text("Email") },
+            isError = ui.emailError != null, supportingText = { ui.emailError?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = ui.password, onValueChange = vm::onPass, label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            isError = ui.passError != null, supportingText = { ui.passError?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = ui.confirm, onValueChange = vm::onConfirm, label = { Text("Confirmar contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            isError = ui.confirmError != null, supportingText = { ui.confirmError?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        if (ui.errorMessage != null) Text(ui.errorMessage!!, color = MaterialTheme.colorScheme.error)
+
+        Button(
+            onClick = { vm.doRegister { /* navegación en LaunchedEffect */ } },
+            enabled = !ui.loading,
+            modifier = Modifier.fillMaxWidth()
+        ) { if (ui.loading) CircularProgressIndicator(strokeWidth = 2.dp) else Text("Registrarme") }
+
+        TextButton(onClick = { nav.navigate(Route.Login.route) }) { Text("Ya tengo cuenta") }
     }
 }
