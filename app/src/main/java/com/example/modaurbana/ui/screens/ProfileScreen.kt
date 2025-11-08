@@ -9,11 +9,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -21,18 +17,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.modaurbana.viewmodel.AuthViewModel
 import com.example.modaurbana.viewmodel.ProfileViewModel
 import java.io.File
 
 @Composable
-fun ProfileScreen(
-    vm: AuthViewModel = viewModel(),
-    pvm: ProfileViewModel = viewModel()
-) {
-    val ui by vm.ui.collectAsState()
+fun ProfileScreen(pvm: ProfileViewModel = viewModel()) {
     val avatar by pvm.avatarUri.collectAsState()
-
     val ctx = LocalContext.current
 
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
@@ -63,11 +53,12 @@ fun ProfileScreen(
     }
 
     Column(
-        Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text("Perfil", style = MaterialTheme.typography.headlineSmall)
-        Text(ui.loggedUser?.email ?: "Email no disponible")
 
         if (avatar.isNotEmpty()) {
             AsyncImage(
@@ -84,7 +75,7 @@ fun ProfileScreen(
                 galleryLauncher.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                 )
-            }) { Text("Desde Galería") }
+            }) { Text("Desde galería") }
 
             Button(onClick = {
                 val status = ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA)
@@ -95,7 +86,17 @@ fun ProfileScreen(
                 } else {
                     requestCameraPermission.launch(Manifest.permission.CAMERA)
                 }
-            }) { Text("Tomar Foto") }
+            }) { Text("Tomar foto") }
+        }
+
+        Button(
+            onClick = { pvm.clearAvatar() },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError
+            )
+        ) {
+            Text("Eliminar imagen")
         }
     }
 }

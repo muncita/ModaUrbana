@@ -13,13 +13,12 @@ data class LoginRequest(
     val password: String
 )
 
-// Usa un único response para ambos (signup/login)
 data class TokenResponse(
-    @SerializedName("token") val token: String? = null,
-    @SerializedName("authToken") val authToken: String? = null // por si Xano usa este nombre
+    @SerializedName("authToken") val authToken: String?,
+    @SerializedName("user_id") val userId: String?
 ) {
     val resolvedToken: String
-        get() = token ?: authToken ?: ""
+        get() = authToken ?: ""
 }
 
 data class User(

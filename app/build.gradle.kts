@@ -57,6 +57,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
     implementation("androidx.compose.material:material-icons-extended:1.5.0")
     // OkHttp - Cliente HTTP
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

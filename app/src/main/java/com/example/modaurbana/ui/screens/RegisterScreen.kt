@@ -12,51 +12,67 @@ import com.example.modaurbana.ui.navigation.Route
 import com.example.modaurbana.viewmodel.AuthViewModel
 
 @Composable
-fun RegisterScreen(nav: NavHostController, vm: AuthViewModel = viewModel()) {
+fun RegisterScreen(navController: NavHostController, vm: AuthViewModel = viewModel()) {
     val ui by vm.ui.collectAsState()
 
-    LaunchedEffect(ui.loggedUser) {
-        if (ui.loggedUser != null) {
-            nav.navigate(Route.Home.route) {
-                popUpTo(Route.Login.route) { inclusive = true }
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    // Navegar si se registró correctamente
+    LaunchedEffect(ui.success) {
+        if (ui.success) {
+            navController.navigate(Route.Home.route) {
+                popUpTo(Route.Register.route) { inclusive = true }
             }
         }
     }
 
-
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         Text("Crear cuenta", style = MaterialTheme.typography.headlineSmall)
+
         OutlinedTextField(
-            value = ui.name, onValueChange = vm::onName, label = { Text("Nombre") },
-            isError = ui.nameError != null, supportingText = { ui.nameError?.let { Text(it) } },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = ui.email, onValueChange = vm::onEmail, label = { Text("Email") },
-            isError = ui.emailError != null, supportingText = { ui.emailError?.let { Text(it) } },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = ui.password, onValueChange = vm::onPass, label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            isError = ui.passError != null, supportingText = { ui.passError?.let { Text(it) } },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = ui.confirm, onValueChange = vm::onConfirm, label = { Text("Confirmar contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            isError = ui.confirmError != null, supportingText = { ui.confirmError?.let { Text(it) } },
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Nombre completo") },
             modifier = Modifier.fillMaxWidth()
         )
 
-        if (ui.errorMessage != null) Text(ui.errorMessage!!, color = MaterialTheme.colorScheme.error)
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Correo electrónico") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        ui.error?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
 
         Button(
-            onClick = { vm.doRegister { /* navegación en LaunchedEffect */ } },
-            enabled = !ui.loading,
+            onClick = { vm.doRegister(name, email, password) },
+            enabled = !ui.isLoading,
             modifier = Modifier.fillMaxWidth()
-        ) { if (ui.loading) CircularProgressIndicator(strokeWidth = 2.dp) else Text("Registrarme") }
+        ) {
+            if (ui.isLoading) CircularProgressIndicator(strokeWidth = 2.dp)
+            else Text("Registrarme")
+        }
 
-        TextButton(onClick = { nav.navigate(Route.Login.route) }) { Text("Ya tengo cuenta") }
+        TextButton(onClick = { navController.navigate(Route.Login.route) }) {
+            Text("Ya tengo cuenta")
+        }
     }
 }

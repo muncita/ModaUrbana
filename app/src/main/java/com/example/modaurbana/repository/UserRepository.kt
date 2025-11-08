@@ -16,20 +16,11 @@ class UserRepository(
      */
     suspend fun fetchMe(): Result<User> = try {
         val token = session.getAuthToken()
-        require(token.isNotEmpty()) { "No hay token de sesión" }
+        require(!token.isNullOrEmpty()) { "No hay token de sesión" }
         val me = api.me("Bearer $token")
         Result.success(me)
     } catch (e: Exception) {
         Result.failure(e)
     }
-
-    // --- (Opcional) Si tu API tuviera GET /users/{id}, puedes habilitar esto y su endpoint: ---
-    // suspend fun fetchUserById(id: Long): Result<User> = try {
-    //     val token = session.getAuthToken()
-    //     require(token.isNotEmpty()) { "No hay token de sesión" }
-    //     val user = api.getUserById(id, "Bearer $token")
-    //     Result.success(user)
-    // } catch (e: Exception) {
-    //     Result.failure(e)
-    // }
 }
+

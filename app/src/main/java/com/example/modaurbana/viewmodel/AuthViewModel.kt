@@ -4,97 +4,96 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.modaurbana.data.local.SessionManager
-import com.example.modaurbana.models.User
 import com.example.modaurbana.repository.AuthRepository
-import com.example.modaurbana.utils.ValidationUtils
+import com.example.modaurbana.models.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * Estado de la UI para login y registro.
+ */
 data class AuthUiState(
-    val name: String = "",
-    val email: String = "",
-    val password: String = "",
-    val confirm: String = "",
-
-    val nameError: String? = null,
-    val emailError: String? = null,
-    val passError: String? = null,
-    val confirmError: String? = null,
-
-    val loading: Boolean = false,
-    val errorMessage: String? = null,
-    val loggedUser: User? = null
+    val isLoading: Boolean = false,
+    val user: User? = null,
+    val error: String? = null,
+    val success: Boolean = false
 )
 
+/**
+ * ViewModel unificado para autenticación (login, registro, logout y obtener usuario actual).
+ */
 class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
     private val session = SessionManager(app.applicationContext)
-    private val repo = AuthRepository(session)
+    private val repository = AuthRepository(session)
 
     private val _ui = MutableStateFlow(AuthUiState())
     val ui: StateFlow<AuthUiState> = _ui
 
-    init {
-        // Si hay token, intentamos obtener perfil
+    /**
+     * Inicia sesión usando la API de Xano (POST /auth/login)
+     */
+    fun doLogin(email: String, password: String) {
         viewModelScope.launch {
-            runCatching { repo.me() }
-                .onSuccess { user -> _ui.value = _ui.value.copy(loggedUser = user) }
-                .onFailure { /* No logged in, ignore */ }
+            _ui.value = AuthUiState(isLoading = true)
+            try {
+                val user = repository.login(email, password)
+                _ui.value = AuthUiState(user = user, success = true)
+            } catch (e: Exception) {
+                _ui.value = AuthUiState(
+                    error = e.localizedMessage ?: "Error al iniciar sesión"
+                )
+            }
         }
     }
 
-    fun onName(s: String) { _ui.value = _ui.value.copy(name = s, nameError = null) }
-    fun onEmail(s: String) { _ui.value = _ui.value.copy(email = s, emailError = null) }
-    fun onPass(s: String) { _ui.value = _ui.value.copy(password = s, passError = null) }
-    fun onConfirm(s: String) { _ui.value = _ui.value.copy(confirm = s, confirmError = null) }
-
-    private fun validateRegister(): Boolean {
-        var ok = true
-        var st = _ui.value
-
-        if (!ValidationUtils.isNotBlank(st.name)) { st = st.copy(nameError = "Nombre requerido"); ok = false }
-        if (!ValidationUtils.isValidEmail(st.email)) { st = st.copy(emailError = "Email inválido"); ok = false }
-        if (!ValidationUtils.isValidPassword(st.password)) { st = st.copy(passError = "Mínimo 6 caracteres"); ok = false }
-        if (st.password != st.confirm) { st = st.copy(confirmError = "Las contraseñas no coinciden"); ok = false }
-
-        _ui.value = st
-        return ok
-    }
-
-    private fun validateLogin(): Boolean {
-        var ok = true
-        var st = _ui.value
-
-        if (!ValidationUtils.isValidEmail(st.email)) { st = st.copy(emailError = "Email inválido"); ok = false }
-        if (!ValidationUtils.isValidPassword(st.password)) { st = st.copy(passError = "Mínimo 6 caracteres"); ok = false }
-
-        _ui.value = st
-        return ok
-    }
-
-    fun doRegister(onSuccess: () -> Unit) {
-        if (!validateRegister()) return
+    /**
+     * Registra un nuevo usuario en la API (POST /auth/signup)
+     */
+    fun doRegister(name: String, email: String, password: String) {
         viewModelScope.launch {
-            _ui.value = _ui.value.copy(loading = true, errorMessage = null)
-            runCatching { repo.register(_ui.value.name, _ui.value.email, _ui.value.password) }
-                .onSuccess { user -> _ui.value = _ui.value.copy(loading = false, loggedUser = user); onSuccess() }
-                .onFailure { e -> _ui.value = _ui.value.copy(loading = false, errorMessage = e.message) }
+            _ui.value = AuthUiState(isLoading = true)
+            try {
+                val user = repository.register(name, email, password)
+                _ui.value = AuthUiState(user = user, success = true)
+            } catch (e: Exception) {
+                _ui.value = AuthUiState(
+                    error = e.localizedMessage ?: "Error al registrar usuario"
+                )
+            }
         }
     }
 
-    fun doLogin(onSuccess: () -> Unit) {
-        if (!validateLogin()) return
+    /**
+     * Obtiene el usuario actual desde /auth/me (si ya hay token guardado)
+     */
+    fun fetchUser() {
         viewModelScope.launch {
-            _ui.value = _ui.value.copy(loading = true, errorMessage = null)
-            runCatching { repo.login(_ui.value.email, _ui.value.password) }
-                .onSuccess { user -> _ui.value = _ui.value.copy(loading = false, loggedUser = user); onSuccess() }
-                .onFailure { e -> _ui.value = _ui.value.copy(loading = false, errorMessage = e.message) }
+            _ui.value = AuthUiState(isLoading = true)
+            try {
+                val user = repository.me()
+                _ui.value = AuthUiState(user = user)
+            } catch (e: Exception) {
+                _ui.value = AuthUiState(error = e.localizedMessage)
+            }
         }
     }
+
+    /**
+     * Cierra la sesión y limpia los datos locales.
+     */
     fun doLogout() {
-        viewModelScope.launch { repo.logout() }
-        _ui.value = AuthUiState() // limpiar estado
+        viewModelScope.launch {
+            repository.logout()
+            _ui.value = AuthUiState()
+        }
     }
 
+    /**
+     * Reinicia el estado de la interfaz (por ejemplo, al cambiar de pantalla).
+     */
+    fun resetState() {
+        _ui.value = AuthUiState()
+    }
 }
