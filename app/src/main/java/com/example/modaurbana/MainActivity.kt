@@ -3,49 +3,44 @@ package com.example.modaurbana
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.navigation.compose.rememberNavController
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.modaurbana.ui.navigation.AppNavigation
+import androidx.activity.viewModels
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.*
+import com.example.modaurbana.ui.navigation.AppNavGraph
 import com.example.modaurbana.ui.navigation.Route
-import com.example.modaurbana.ui.theme.ModaUrbanaTheme
 import com.example.modaurbana.viewmodel.AuthViewModel
 
-/**
- * MainActivity:
- * - Inicializa SessionManager
- * - Controla el flujo de inicio de sesión y navegación
- */
 class MainActivity : ComponentActivity() {
+
+    // ✅ ViewModel en scope de Activity (usa AndroidViewModelFactory bajo el capó)
+    private val vm: AuthViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         setContent {
-            ModaUrbanaTheme {
-                // ✅ Crear el controlador de navegación
-                val navController = rememberNavController()
+            MaterialTheme {
+                Surface(color = MaterialTheme.colorScheme.background) {
 
-                // ✅ Inicializar el ViewModel correctamente
-                val authViewModel: AuthViewModel = viewModel()
+                    // Decide inicio en tiempo de ejecución
+                    var start by remember { mutableStateOf<String?>(null) }
 
-                // ✅ Observar el estado actual del usuario
-                val uiState by authViewModel.ui.collectAsState()
+                    // Puedes hacer lógica de arranque aquí (leer token, etc.)
+                    LaunchedEffect(Unit) {
+                        try {
+                            vm.loadUser()
+                            // Si quieres decidir según token, aquí puedes consultarlo en tu SessionManager.
+                        } finally {
+                            start = Route.Login.route   // cámbialo a Home si quieres auto-login
+                        }
+                    }
 
-                // ✅ Determinar pantalla inicial según sesión
-                val startDestination = if (uiState.user != null) {
-                    Route.Profile.route
-                } else {
-                    Route.Login.route
+                    AppNavGraph(
+                        vm = vm,
+                        startDestination = start ?: Route.Login.route
+                    )
                 }
-
-                // ✅ Configurar la navegación principal
-                AppNavigation(
-                    navController = navController,
-                    vm = authViewModel
-                )
             }
         }
     }

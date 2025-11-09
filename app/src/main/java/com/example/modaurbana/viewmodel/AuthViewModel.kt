@@ -42,7 +42,11 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
     }
+    val avatarUriFlow = session.avatarUriFlow
 
+    suspend fun saveAvatarUri(uri: String) {
+        session.saveAvatarUri(uri)
+    }
     /**
      * Registrar nuevo usuario
      */

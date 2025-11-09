@@ -27,7 +27,17 @@ fun AppNavigation(
 
         // 🔹 Pantalla de registro de nuevos usuarios
         composable(Route.Register.route) {
-            RegisterScreen(navController = navController, vm = vm)
+            RegisterScreen(
+                navController = navController,
+                vm = vm,
+                onRegisterSuccess = {
+                    // Al registrarse con éxito → ir a Home
+                    navController.navigate(Route.Home.route) {
+                        popUpTo(Route.Login.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
 
         // 🔹 Pantalla principal o Home
