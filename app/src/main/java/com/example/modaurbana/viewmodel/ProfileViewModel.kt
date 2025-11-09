@@ -4,29 +4,25 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.modaurbana.data.local.SessionManager
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class ProfileViewModel(app: Application) : AndroidViewModel(app) {
-
     private val session = SessionManager(app.applicationContext)
 
-    val avatarUri = session.avatarUriFlow.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        ""
-    )
+    private val _avatarUri = MutableStateFlow<String?>(null)
+    val avatarUri: StateFlow<String?> = _avatarUri
 
-    fun setAvatar(uri: String) {
+    fun saveAvatarUri(uri: String) {
         viewModelScope.launch {
-            session.saveAvatarUri(uri)
+            _avatarUri.value = uri
         }
     }
 
     fun clearAvatar() {
         viewModelScope.launch {
-            session.saveAvatarUri("")
+            _avatarUri.value = null
         }
     }
 }

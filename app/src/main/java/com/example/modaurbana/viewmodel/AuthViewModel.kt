@@ -4,96 +4,98 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.modaurbana.data.local.SessionManager
+import com.example.modaurbana.models.UserResponse
 import com.example.modaurbana.repository.AuthRepository
-import com.example.modaurbana.models.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Estado de la UI para login y registro.
- */
-data class AuthUiState(
-    val isLoading: Boolean = false,
-    val user: User? = null,
-    val error: String? = null,
-    val success: Boolean = false
-)
-
-/**
- * ViewModel unificado para autenticación (login, registro, logout y obtener usuario actual).
+ * ViewModel central para manejar login, registro y sesión persistente.
  */
 class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
     private val session = SessionManager(app.applicationContext)
-    private val repository = AuthRepository(session)
+    private val repo = AuthRepository(session)
 
     private val _ui = MutableStateFlow(AuthUiState())
     val ui: StateFlow<AuthUiState> = _ui
 
     /**
-     * Inicia sesión usando la API de Xano (POST /auth/login)
+     * Iniciar sesión
      */
-    fun doLogin(email: String, password: String) {
+    fun login(email: String, password: String) {
         viewModelScope.launch {
-            _ui.value = AuthUiState(isLoading = true)
             try {
-                val user = repository.login(email, password)
-                _ui.value = AuthUiState(user = user, success = true)
+                _ui.value = _ui.value.copy(isLoading = true, error = null)
+
+                // 1️⃣ Login → obtener token
+                val loginResponse = repo.login(email, password)
+
+                // 2️⃣ Obtener datos del usuario autenticado
+                val user = repo.currentUser()
+
+                // 3️⃣ Actualizar UI
+                _ui.value = AuthUiState(user = user, isLoading = false)
             } catch (e: Exception) {
-                _ui.value = AuthUiState(
-                    error = e.localizedMessage ?: "Error al iniciar sesión"
-                )
+                _ui.value = AuthUiState(error = e.message ?: "Error desconocido")
             }
         }
     }
 
     /**
-     * Registra un nuevo usuario en la API (POST /auth/signup)
+     * Registrar nuevo usuario
      */
-    fun doRegister(name: String, email: String, password: String) {
+    fun register(name: String, email: String, password: String) {
         viewModelScope.launch {
-            _ui.value = AuthUiState(isLoading = true)
             try {
-                val user = repository.register(name, email, password)
-                _ui.value = AuthUiState(user = user, success = true)
+                _ui.value = _ui.value.copy(isLoading = true, error = null)
+
+                // 1️⃣ Registro → obtener token
+                val registerResponse = repo.register(name, email, password)
+
+                // 2️⃣ Obtener usuario autenticado tras registro
+                val user = repo.currentUser()
+
+                // 3️⃣ Actualizar UI
+                _ui.value = AuthUiState(user = user, isLoading = false)
             } catch (e: Exception) {
-                _ui.value = AuthUiState(
-                    error = e.localizedMessage ?: "Error al registrar usuario"
-                )
+                _ui.value = AuthUiState(error = e.message ?: "Error desconocido")
             }
         }
     }
 
     /**
-     * Obtiene el usuario actual desde /auth/me (si ya hay token guardado)
+     * Cargar usuario actual (cuando la app inicia)
      */
-    fun fetchUser() {
+    fun loadUser() {
         viewModelScope.launch {
-            _ui.value = AuthUiState(isLoading = true)
             try {
-                val user = repository.me()
+                val user = repo.currentUser()
                 _ui.value = AuthUiState(user = user)
             } catch (e: Exception) {
-                _ui.value = AuthUiState(error = e.localizedMessage)
+                _ui.value = AuthUiState(error = e.message)
             }
         }
     }
 
     /**
-     * Cierra la sesión y limpia los datos locales.
+     * Cerrar sesión
      */
-    fun doLogout() {
+    fun logout() {
         viewModelScope.launch {
-            repository.logout()
+            repo.logout()
             _ui.value = AuthUiState()
         }
     }
-
-    /**
-     * Reinicia el estado de la interfaz (por ejemplo, al cambiar de pantalla).
-     */
-    fun resetState() {
-        _ui.value = AuthUiState()
-    }
 }
+
+/**
+ * Estado de la UI (flujo observable)
+ */
+data class AuthUiState(
+    val user: UserResponse? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
+

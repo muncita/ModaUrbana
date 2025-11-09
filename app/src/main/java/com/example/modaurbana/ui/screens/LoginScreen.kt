@@ -10,32 +10,22 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.modaurbana.ui.navigation.Route
 import com.example.modaurbana.viewmodel.AuthViewModel
-import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun LoginScreen(navController: NavHostController, vm: AuthViewModel = viewModel()) {
+fun LoginScreen(navController: NavHostController, vm: AuthViewModel) {
     val ui by vm.ui.collectAsState()
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Si el login fue exitoso → ir al Home
-    LaunchedEffect(ui.success) {
-        if (ui.success) {
-            navController.navigate(Route.Home.route) {
-                popUpTo(Route.Login.route) { inclusive = true }
-            }
-        }
-    }
-
     Column(
-        Modifier
+        modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center
     ) {
-        Text("Iniciar sesión", style = MaterialTheme.typography.headlineSmall)
+        Text("Iniciar sesión", style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.height(16.dp))
 
         OutlinedTextField(
             value = email,
@@ -43,6 +33,7 @@ fun LoginScreen(navController: NavHostController, vm: AuthViewModel = viewModel(
             label = { Text("Correo electrónico") },
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
             value = password,
@@ -52,30 +43,35 @@ fun LoginScreen(navController: NavHostController, vm: AuthViewModel = viewModel(
             modifier = Modifier.fillMaxWidth()
         )
 
-        ui.error?.let {
-            Text(it, color = MaterialTheme.colorScheme.error)
-        }
+        Spacer(Modifier.height(16.dp))
 
         Button(
-            onClick = { vm.doLogin(email, password) },
-            enabled = !ui.isLoading,
-            modifier = Modifier.fillMaxWidth()
+            onClick = { vm.login(email, password) },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !ui.isLoading
         ) {
             if (ui.isLoading) CircularProgressIndicator(strokeWidth = 2.dp)
             else Text("Ingresar")
         }
 
-        TextButton(onClick = { navController.navigate(Route.Register.route) }) {
-            Text("Crear cuenta nueva")
-        }
-    }
-}
+        Spacer(Modifier.height(8.dp))
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun LoginScreenPreview() {
-    com.example.modaurbana.ui.theme.ModaUrbanaTheme {
-        val fakeNav = rememberNavController()
-        LoginScreen(navController = fakeNav)
+        ui.error?.let {
+            Text(text = it, color = MaterialTheme.colorScheme.error)
+        }
+
+        ui.user?.let {
+            // Si el login fue exitoso, navegar a Home
+            LaunchedEffect(Unit) {
+                navController.navigate(Route.Home.route) {
+                    popUpTo(Route.Login.route) { inclusive = true }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+        TextButton(onClick = { navController.navigate(Route.Register.route) }) {
+            Text("Crear nueva cuenta")
+        }
     }
 }

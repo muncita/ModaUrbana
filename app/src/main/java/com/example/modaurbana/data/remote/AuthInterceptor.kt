@@ -1,35 +1,38 @@
 package com.example.modaurbana.data.remote
 
-
 import com.example.modaurbana.data.local.SessionManager
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 
-
-class AuthInterceptor(
-    private val sessionManager: SessionManager
-) : Interceptor {
+/**
+ * Interceptor que agrega el header Authorization solo en endpoints privados.
+ * Diferencia: validación más estricta de rutas y logs de depuración.
+ */
+class AuthInterceptor(private val session: SessionManager) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val originalRequest = chain.request()
+        val request = chain.request()
+        val path = request.url.encodedPath
 
-        // Recuperar el token (usando runBlocking porque intercept no es suspend)
-        val token = runBlocking {
-            sessionManager.getAuthToken()
+        // Evitar rutas públicas
+        if (path.endsWith("/auth/login") || path.endsWith("/auth/signup")) {
+            println("🌐 [AuthInterceptor] Ruta pública: $path (sin token)")
+            return chain.proceed(request)
         }
 
-        // Si no hay token, continuar con la petición original
-        if (token.isNullOrEmpty()) {
-            return chain.proceed(originalRequest)
+        // Obtener token sincronamente
+        val token = runBlocking { session.getAuthToken() }
+
+        return if (!token.isNullOrEmpty()) {
+            println("🔑 [AuthInterceptor] Token agregado a $path")
+            val newRequest = request.newBuilder()
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+            chain.proceed(newRequest)
+        } else {
+            println("⚠️ [AuthInterceptor] No hay token guardado")
+            chain.proceed(request)
         }
-
-        // Crear nueva petición CON el token
-        val authenticatedRequest = originalRequest.newBuilder()
-            .header("Authorization", "Bearer $token")
-            .build()
-
-        // Continuar con la petición autenticada
-        return chain.proceed(authenticatedRequest)
     }
 }

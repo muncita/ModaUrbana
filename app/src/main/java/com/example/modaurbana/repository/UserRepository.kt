@@ -1,26 +1,25 @@
 package com.example.modaurbana.repository
 
-import com.example.modaurbana.data.local.SessionManager
-import com.example.modaurbana.data.remote.ApiService
 import com.example.modaurbana.data.remote.RetrofitClient
-import com.example.modaurbana.models.User
+import com.example.modaurbana.models.LoginResponse
+import com.example.modaurbana.models.UserResponse
 
-class UserRepository(
-    private val session: SessionManager,
-    private val api: ApiService = RetrofitClient.api
-) {
+/**
+ * Repositorio que maneja las peticiones de usuario:
+ * login, datos del perfil, etc.
+ */
+class UserRepository {
+    private val api = RetrofitClient.instance
 
-    /**
-     * Retorna el usuario autenticado usando /auth/me.
-     * Requiere que el token esté guardado en DataStore (lo hace AuthRepository al login/signup).
-     */
-    suspend fun fetchMe(): Result<User> = try {
-        val token = session.getAuthToken()
-        require(!token.isNullOrEmpty()) { "No hay token de sesión" }
-        val me = api.me("Bearer $token")
-        Result.success(me)
-    } catch (e: Exception) {
-        Result.failure(e)
+    suspend fun getCurrentUser(token: String): UserResponse {
+        return api.getCurrentUser("Bearer $token")
+    }
+
+    suspend fun login(email: String, password: String): LoginResponse {
+        return api.login(mapOf("email" to email, "password" to password))
+    }
+
+    suspend fun register(name: String, email: String, password: String): LoginResponse {
+        return api.register(mapOf("name" to name, "email" to email, "password" to password))
     }
 }
-

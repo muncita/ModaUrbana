@@ -1,114 +1,60 @@
 package com.example.modaurbana.ui.screens
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
-import com.example.modaurbana.viewmodel.ProfileViewModel
-import java.io.File
+import androidx.navigation.NavHostController
+import com.example.modaurbana.ui.navigation.Route
+import com.example.modaurbana.viewmodel.AuthViewModel
 
 @Composable
-fun ProfileScreen(pvm: ProfileViewModel = viewModel()) {
-    val avatar by pvm.avatarUri.collectAsState()
-    val ctx = LocalContext.current
+fun ProfileScreen(navController: NavHostController, vm: AuthViewModel) {
+    val ui by vm.ui.collectAsState()
 
-    var cameraUri by remember { mutableStateOf<Uri?>(null) }
-
-    // Galería
-    val galleryLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        uri?.let { pvm.setAvatar(it.toString()) }
-    }
-
-    // Cámara
-    val cameraLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicture()
-    ) { ok ->
-        if (ok) cameraUri?.let { pvm.setAvatar(it.toString()) }
-    }
-
-    // Permiso cámara
-    val requestCameraPermission = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            val (uri, _) = createImageUri(ctx)
-            cameraUri = uri
-            cameraLauncher.launch(uri)
+    // Si no hay usuario logueado, redirigir al login
+    LaunchedEffect(ui.user) {
+        if (ui.user == null && ui.error == null) {
+            navController.navigate(Route.Login.route) {
+                popUpTo(Route.Profile.route) { inclusive = true }
+            }
         }
     }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Box(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text("Perfil", style = MaterialTheme.typography.headlineSmall)
-
-        if (avatar.isNotEmpty()) {
-            AsyncImage(
-                model = avatar,
-                contentDescription = "Avatar",
-                modifier = Modifier.size(128.dp)
-            )
-        } else {
-            Text("Sin imagen de perfil")
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = {
-                galleryLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                )
-            }) { Text("Desde galería") }
-
-            Button(onClick = {
-                val status = ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA)
-                if (status == PackageManager.PERMISSION_GRANTED) {
-                    val (uri, _) = createImageUri(ctx)
-                    cameraUri = uri
-                    cameraLauncher.launch(uri)
-                } else {
-                    requestCameraPermission.launch(Manifest.permission.CAMERA)
+        when {
+            ui.isLoading -> CircularProgressIndicator()
+            ui.user != null -> {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("👤 Perfil de Usuario", style = MaterialTheme.typography.headlineMedium)
+                    Spacer(Modifier.height(8.dp))
+                    Text("Nombre: ${ui.user?.name}", fontWeight = FontWeight.Bold)
+                    Text("Correo: ${ui.user?.email}")
+                    Spacer(Modifier.height(20.dp))
+                    Button(
+                        onClick = {
+                            vm.logout()
+                            navController.navigate(Route.Login.route) {
+                                popUpTo(0) // Limpia el backstack
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text("Cerrar sesión")
+                    }
                 }
-            }) { Text("Tomar foto") }
-        }
-
-        Button(
-            onClick = { pvm.clearAvatar() },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError
-            )
-        ) {
-            Text("Eliminar imagen")
+            }
+            ui.error != null -> {
+                Text("Error: ${ui.error}", color = MaterialTheme.colorScheme.error)
+            }
         }
     }
-}
-
-/** Crea un archivo temporal y devuelve su Uri (FileProvider) + el File */
-private fun createImageUri(context: Context): Pair<Uri, File> {
-    val imagesDir = File(context.cacheDir, "images").apply { if (!exists()) mkdirs() }
-    val file = File.createTempFile("avatar_", ".jpg", imagesDir)
-    val uri = FileProvider.getUriForFile(
-        context,
-        "${context.packageName}.fileprovider",
-        file
-    )
-    return uri to file
 }

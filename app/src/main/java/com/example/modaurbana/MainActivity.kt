@@ -6,37 +6,46 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.example.modaurbana.data.local.SessionManager
-import com.example.modaurbana.ui.navigation.AppNavHost
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.modaurbana.ui.navigation.AppNavigation
 import com.example.modaurbana.ui.navigation.Route
 import com.example.modaurbana.ui.theme.ModaUrbanaTheme
 import com.example.modaurbana.viewmodel.AuthViewModel
 
+/**
+ * MainActivity:
+ * - Inicializa SessionManager
+ * - Controla el flujo de inicio de sesión y navegación
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
-        // ✅ Inicializa SessionManager para Retrofit y DataStore
-        SessionManager.init(applicationContext)
-
-        enableEdgeToEdge() // (opcional: para usar diseño de borde a borde)
         setContent {
             ModaUrbanaTheme {
+                // ✅ Crear el controlador de navegación
                 val navController = rememberNavController()
-                val authViewModel: AuthViewModel = viewModel()
-                val ui by authViewModel.ui.collectAsState()
 
-                // Define la pantalla inicial (Home si hay sesión, Login si no)
-                val startDestination = if (ui.user != null) {
-                    Route.Home.route
+                // ✅ Inicializar el ViewModel correctamente
+                val authViewModel: AuthViewModel = viewModel()
+
+                // ✅ Observar el estado actual del usuario
+                val uiState by authViewModel.ui.collectAsState()
+
+                // ✅ Determinar pantalla inicial según sesión
+                val startDestination = if (uiState.user != null) {
+                    Route.Profile.route
                 } else {
                     Route.Login.route
                 }
 
-                // ✅ Llama correctamente al NavHost con el controlador
-                AppNavHost(navController = navController, startDestination = startDestination)
+                // ✅ Configurar la navegación principal
+                AppNavigation(
+                    navController = navController,
+                    vm = authViewModel
+                )
             }
         }
     }

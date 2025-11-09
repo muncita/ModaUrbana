@@ -1,43 +1,43 @@
 package com.example.modaurbana.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.modaurbana.ui.screens.*
+import com.example.modaurbana.viewmodel.AuthViewModel
 
 /**
- * Controla la navegación principal de la app.
- * Define las pantallas y sus rutas según la clase Route.
+ * Controla la navegación entre pantallas.
+ * Usa el mismo ViewModel (AuthViewModel) para compartir el estado de autenticación.
  */
 @Composable
-fun AppNavHost(
-    navController: NavHostController,
-    startDestination: String,
-    modifier: Modifier = Modifier
+fun AppNavigation(
+    navController: NavHostController,   // ✅ ← este parámetro faltaba
+    vm: AuthViewModel
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination,
-        modifier = modifier
+        startDestination = Route.Login.route
     ) {
-        // Pantallas del flujo de autenticación
+        // 🔹 Pantalla de inicio de sesión
         composable(Route.Login.route) {
-            LoginScreen(navController)
+            LoginScreen(navController = navController, vm = vm)
         }
+
+        // 🔹 Pantalla de registro de nuevos usuarios
         composable(Route.Register.route) {
-            RegisterScreen(navController)
+            RegisterScreen(navController = navController, vm = vm)
         }
 
-        // Pantalla principal (inicio tras login)
+        // 🔹 Pantalla principal o Home
         composable(Route.Home.route) {
-            HomeScreen(navController)
+            HomeScreen(navController = navController, vm = vm)
         }
 
-        // Perfil del usuario (foto, cámara, galería)
+        // 🔹 Pantalla de perfil del usuario
         composable(Route.Profile.route) {
-            ProfileScreen()
+            ProfileScreen(navController = navController, vm = vm)
         }
     }
 }
