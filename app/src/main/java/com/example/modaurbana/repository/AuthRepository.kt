@@ -15,7 +15,6 @@ class AuthRepository(private val session: SessionManager) {
     suspend fun login(email: String, password: String): LoginResponse =
         withContext(Dispatchers.IO) {
             val resp = api.login(LoginRequest(email = email, password = password))
-            // Guarda el token si viene
             resp.authToken?.let { session.saveAuthToken(it) }
             resp
         }
@@ -33,10 +32,6 @@ class AuthRepository(private val session: SessionManager) {
             api.getCurrentUser("Bearer $token")
         }
     suspend fun logout() = withContext(Dispatchers.IO) {
-        // Puedes limpiar solo el token:
-        // session.clearAuthToken()
-
-        // O limpiar TODO lo persistido (token + avatar, etc.)
         session.clearSession()
     }
 }

@@ -6,10 +6,7 @@ import com.example.modaurbana.models.LoginResponse
 import com.example.modaurbana.models.RegisterRequest
 import com.example.modaurbana.models.UserResponse
 
-/**
- * Repositorio que maneja las peticiones de usuario:
- * login, datos del perfil, etc.
- */
+
 class UserRepository {
     private val api = RetrofitClient.instance
 

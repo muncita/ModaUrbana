@@ -5,10 +5,7 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 
-/**
- * Interceptor que agrega el header Authorization solo en endpoints privados.
- * Diferencia: validación más estricta de rutas y logs de depuración.
- */
+
 class AuthInterceptor(private val session: SessionManager) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {

@@ -29,7 +29,7 @@ fun LoginScreen(
     var showPassword by rememberSaveable { mutableStateOf(false) }
     var localError by remember { mutableStateOf<String?>(null) }
 
-    // Si ya hay usuario autenticado, navega a Home
+
     LaunchedEffect(ui.user) {
         if (ui.user != null) {
             navController.navigate(Route.Home.route) {

@@ -45,15 +45,12 @@ fun AppNavGraph(
             }
         }
     ) { innerPadding ->
-        // Aplicamos el padding del Scaffold al contenedor del NavHost,
-        // y NO pasamos contentPadding a las screens.
         NavHost(
             navController = navController,
             startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Route.Login.route) {
-                // Tu LoginScreen debe encargarse de navegar a Home al éxito
                 LoginScreen(navController = navController, vm = vm)
             }
             composable(Route.Register.route) {
@@ -61,7 +58,6 @@ fun AppNavGraph(
                     navController = navController,
                     vm = vm,
                     onRegisterSuccess = {
-                        // Al registrarse con éxito → ir a Home
                         navController.navigate(Route.Home.route) {
                             popUpTo(Route.Login.route) { inclusive = true }
                             launchSingleTop = true
@@ -73,7 +69,6 @@ fun AppNavGraph(
                 HomeScreen(navController = navController, vm = vm)
             }
             composable(Route.Profile.route) {
-                // ProfileScreen tiene contentPadding opcional; no lo pasamos
                 ProfileScreen(navController = navController, vm = vm)
             }
         }

@@ -15,7 +15,7 @@ data class RegisterRequest(
 
 data class LoginResponse(
     @SerializedName("authToken") val authToken: String?,
-    // ajusta al campo real del backend: "user_id", "userId", etc.
+
     @SerializedName("user_id") val userId: String?
 )
 

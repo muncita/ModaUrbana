@@ -38,7 +38,6 @@ fun HomeScreen(navController: NavHostController, vm: AuthViewModel) {
                 Button(
                     onClick = {
                         vm.logout()
-                        // Navega limpiando el backstack para evitar volver con back
                         navController.navigate(Route.Login.route) {
                             popUpTo(0)
                             launchSingleTop = true

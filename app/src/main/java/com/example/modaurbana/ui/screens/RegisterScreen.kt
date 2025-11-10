@@ -22,10 +22,7 @@ import androidx.navigation.NavHostController
 import com.example.modaurbana.ui.navigation.Route
 import com.example.modaurbana.viewmodel.AuthViewModel
 
-/**
- * Pantalla de registro de nuevos usuarios.
- * Incluye: política de contraseña, ver/ocultar contraseña y navegación tras éxito.
- */
+
 @Composable
 fun RegisterScreen(
     navController: NavHostController,
@@ -38,17 +35,13 @@ fun RegisterScreen(
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
-
-    // Mostrar/ocultar contraseña
+    
     var showPassword by rememberSaveable { mutableStateOf(false) }
-
-    // Política visible al entrar (cerrable)
+    
     var showPolicy by rememberSaveable { mutableStateOf(true) }
-
-    // Error local de validación (además del ui.error del ViewModel)
+    
     var localError by remember { mutableStateOf<String?>(null) }
 
-    // 🚀 Navega automáticamente tras registro exitoso
     LaunchedEffect(ui.user) {
         if (ui.user != null) {
             onRegisterSuccess()
@@ -123,7 +116,6 @@ fun RegisterScreen(
 
             Button(
                 onClick = {
-                    // Validación local alineada a Xano: ≥8 y al menos 1 letra
                     val strong = password.length >= 8 && password.any { it.isLetter() }
                     if (!strong) {
                         localError = "La contraseña debe tener al menos 8 caracteres y contener al menos 1 letra."
@@ -146,8 +138,7 @@ fun RegisterScreen(
                     Text("Registrarme")
                 }
             }
-
-            // 🔹 Mostrar errores (prioriza el de la API si existe)
+            
             val errorToShow = ui.error ?: localError
             if (!errorToShow.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))

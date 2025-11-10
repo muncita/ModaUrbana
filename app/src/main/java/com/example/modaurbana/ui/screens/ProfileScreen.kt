@@ -34,17 +34,14 @@ fun ProfileScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Observa el avatar guardado en DataStore (expuesto por el VM)
     val avatar by vm.avatarUriFlow.collectAsState(initial = "")
 
-    // Si no hay usuario, vuelve a Login
     LaunchedEffect(ui.user) {
         if (ui.user == null && ui.error == null) {
             navController.navigate(Route.Login.route) { popUpTo(0) }
         }
     }
 
-    // --- Launchers de galería y cámara ---
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -93,7 +90,6 @@ fun ProfileScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Avatar (usa el Uri persistido; si está vacío, no muestra nada)
                 AsyncImage(
                     model = ImageRequest.Builder(context)
                         .data(avatar.ifBlank { null })

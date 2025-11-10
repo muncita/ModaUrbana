@@ -1,6 +1,6 @@
 package com.example.modaurbana.data.remote
 
-import com.example.modaurbana.models.LoginRequest
+import com.example.modaurbana.models.*
 import com.example.modaurbana.models.LoginResponse
 import com.example.modaurbana.models.RegisterRequest
 import com.example.modaurbana.models.UserResponse

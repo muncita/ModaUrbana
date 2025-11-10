@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // Pega aquí la URL CORRECTA de tu Xano (con slash final)
+
     private const val BASE_URL = "https://x8ki-letl-twmt.n7.xano.io/api:Rfm_61dW/"
 
     private val logging by lazy {

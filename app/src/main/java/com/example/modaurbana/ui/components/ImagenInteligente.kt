@@ -15,10 +15,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 
-/**
- * Componente de avatar reutilizable (Guía 8/10).
- * Completa estilos/animaciones con Guía 12 (AnimatedVisibility, etc.) si quieres sumar puntaje EP3.
- */
 @Composable
 fun ImagenInteligente(uri: Uri?, onClick: () -> Unit) {
     Box {
