@@ -1,6 +1,10 @@
 package com.example.modaurbana.ui.screens
 
-
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.runtime.*
+import androidx.core.content.ContextCompat
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -61,7 +65,6 @@ fun ProfileScreen(
             }
         }
     }
-
     fun createImageUriForCamera(context: Context): Uri {
         val imagesDir = File(context.cacheDir, "images").apply { if (!exists()) mkdirs() }
         val file = File.createTempFile("avatar_", ".jpg", imagesDir)
@@ -69,6 +72,30 @@ fun ProfileScreen(
         return FileProvider.getUriForFile(context, authority, file)
     }
 
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val uri = createImageUriForCamera(context).also { tempCameraUri = it }
+            cameraLauncher.launch(uri)
+        } else {
+        }
+    }
+
+    OutlinedButton(onClick = {
+        val hasCamera = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasCamera) {
+            val uri = createImageUriForCamera(context).also { tempCameraUri = it }
+            cameraLauncher.launch(uri)
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }) {
+        Text("Tomar foto")
+    }
     Scaffold { innerPadding ->
         Box(
             modifier = Modifier
