@@ -1,5 +1,6 @@
 package com.example.modaurbana.ui.navigation
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -39,6 +40,10 @@ fun AppNavGraph(
 ) {
     val navController = rememberNavController()
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+
     Scaffold(
         bottomBar = {
             val currentDestination = navController.currentDestination()
@@ -51,48 +56,57 @@ fun AppNavGraph(
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
+        Crossfade(
+            targetState = currentRoute,
             modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(Route.Login.route) {
-                LoginScreen(navController = navController, vm = vm)
-            }
-            composable(Route.Register.route) {
-                RegisterScreen(
-                    navController = navController,
-                    vm = vm,
-                    onRegisterSuccess = {
-                        navController.navigate(Route.Home.route) {
-                            popUpTo(Route.Login.route) { inclusive = true }
-                            launchSingleTop = true
+
+        ) { animatedRoute ->
+
+            NavHost(
+                navController = navController,
+                startDestination = startDestination,
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                composable(Route.Login.route) {
+                    LoginScreen(navController = navController, vm = vm)
+                }
+                composable(Route.Register.route) {
+                    RegisterScreen(
+                        navController = navController,
+                        vm = vm,
+                        onRegisterSuccess = {
+                            navController.navigate(Route.Home.route) {
+                                popUpTo(Route.Login.route) { inclusive = true }
+                                launchSingleTop = true
+                            }
                         }
-                    }
-                )
-            }
-            composable(Route.Home.route) {
-                HomeScreen(navController = navController, vm = vm)
-            }
-            composable(Route.Profile.route) {
-                ProfileScreen(navController = navController, vm = vm)
+                    )
+                }
+                composable(Route.Home.route) {
+                    HomeScreen(navController = navController, vm = vm)
+                }
+                composable(Route.Profile.route) {
+                    ProfileScreen(navController = navController, vm = vm)
 
-            }
+                }
 
-            composable(Route.ProductList.route) {
-                val productVm: ProductListViewModel = viewModel()
-                val cartVm: CartViewModel = viewModel()
-                ProductListScreen(
-                    navController = navController,
-                    productListViewModel = productVm,
-                    cartViewModel = cartVm
-                )
-            }
+                composable(Route.ProductList.route) {
+                    val productVm: ProductListViewModel = viewModel()
+                    val cartVm: CartViewModel = viewModel()
+                    ProductListScreen(
+                        navController = navController,
+                        productListViewModel = productVm,
+                        cartViewModel = cartVm
+                    )
+                }
 
-            composable(Route.Cart.route) {
-                val cartVm: CartViewModel = viewModel()
-                CartScreen(navController = navController, vm = cartVm)
-            }
+                composable(Route.Cart.route) {
+                    val cartVm: CartViewModel = viewModel()
+                    CartScreen(navController = navController, vm = cartVm)
+                }
+
+        }
+
 
         }
         }
