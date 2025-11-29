@@ -7,4 +7,8 @@ sealed class Route(val route: String) {
 
     object Profile : Route("profile")
     object Home : Route("home")
+
+    object ProductList : Route("product_list")
+
+    object Cart : Route("cart")
 }

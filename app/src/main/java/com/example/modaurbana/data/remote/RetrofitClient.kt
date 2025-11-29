@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
 
-    private const val BASE_URL = "https://x8ki-letl-twmt.n7.xano.io/api:Rfm_61dW/"
+    private const val BASE_URL = "http://10.0.2.2:3000/api/"
 
     private val logging by lazy {
         HttpLoggingInterceptor().apply {

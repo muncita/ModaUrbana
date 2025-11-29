@@ -2,8 +2,8 @@ package com.example.modaurbana.repository
 
 import com.example.modaurbana.data.local.SessionManager
 import com.example.modaurbana.data.remote.RetrofitClient
-import com.example.modaurbana.models.LoginRequest
-import com.example.modaurbana.models.LoginResponse
+import com.example.modaurbana.data.remote.dto.LoginRequest
+import com.example.modaurbana.data.remote.dto.LoginResponse
 import com.example.modaurbana.models.RegisterRequest
 import com.example.modaurbana.models.UserResponse
 import kotlinx.coroutines.Dispatchers

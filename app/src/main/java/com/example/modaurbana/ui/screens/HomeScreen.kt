@@ -35,6 +35,10 @@ fun HomeScreen(navController: NavHostController, vm: AuthViewModel) {
                 Text("Correo: ${ui.user?.email}")
                 Spacer(Modifier.height(16.dp))
 
+                Button(onClick = { navController.navigate(Route.ProductList.route) }) {
+                    Text("Ver catálogo")
+                }
+
                 Button(
                     onClick = {
                         vm.logout()

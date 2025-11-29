@@ -8,6 +8,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,6 +26,11 @@ import com.example.modaurbana.ui.screens.LoginScreen
 import com.example.modaurbana.ui.screens.ProfileScreen
 import com.example.modaurbana.ui.screens.RegisterScreen
 import com.example.modaurbana.viewmodel.AuthViewModel
+import com.example.modaurbana.ui.screens.ProductListScreen
+import com.example.modaurbana.ui.screens.CartScreen
+import com.example.modaurbana.viewmodel.ProductListViewModel
+import com.example.modaurbana.viewmodel.CartViewModel
+
 
 @Composable
 fun AppNavGraph(
@@ -70,10 +76,27 @@ fun AppNavGraph(
             }
             composable(Route.Profile.route) {
                 ProfileScreen(navController = navController, vm = vm)
+
             }
+
+            composable(Route.ProductList.route) {
+                val productVm: ProductListViewModel = viewModel()
+                val cartVm: CartViewModel = viewModel()
+                ProductListScreen(
+                    navController = navController,
+                    productListViewModel = productVm,
+                    cartViewModel = cartVm
+                )
+            }
+
+            composable(Route.Cart.route) {
+                val cartVm: CartViewModel = viewModel()
+                CartScreen(navController = navController, vm = cartVm)
+            }
+
+        }
         }
     }
-}
 
 @Composable
 private fun BottomBar(

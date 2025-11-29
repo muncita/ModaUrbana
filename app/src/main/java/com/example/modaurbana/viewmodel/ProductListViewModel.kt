@@ -1,0 +1,79 @@
+package com.example.modaurbana.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.modaurbana.models.Producto
+import com.example.modaurbana.repository.ProductRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+
+class ProductListViewModel : ViewModel() {
+
+    private val repo = ProductRepository()
+
+    private val _ui = MutableStateFlow(ProductListUiState())
+    val ui: StateFlow<ProductListUiState> = _ui
+
+    init {
+        loadProductos()
+    }
+
+    fun loadProductos() {
+        viewModelScope.launch {
+            try {
+                _ui.value = _ui.value.copy(isLoading = true, error = null)
+
+                val productos = repo.getProductos()
+
+                _ui.value = _ui.value.copy(
+                    isLoading = false,
+                    productos = productos,
+                    tallasDisponibles = productos.mapNotNull { it.talla }.distinct(),
+                    materialesDisponibles = productos.mapNotNull { it.material }.distinct(),
+                    estilosDisponibles = productos.mapNotNull { it.estilo }.distinct()
+                )
+            } catch (e: Exception) {
+                _ui.value = _ui.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Error al cargar productos"
+                )
+            }
+        }
+    }
+
+    fun aplicarFiltros(
+        talla: String?,
+        material: String?,
+        estilo: String?
+    ) {
+        val current = _ui.value
+        _ui.value = current.copy(
+            tallaSeleccionada = talla,
+            materialSeleccionado = material,
+            estiloSeleccionado = estilo
+        )
+    }
+}
+
+data class ProductListUiState(
+    val isLoading: Boolean = false,
+    val productos: List<Producto> = emptyList(),
+    val error: String? = null,
+
+    val tallasDisponibles: List<String> = emptyList(),
+    val materialesDisponibles: List<String> = emptyList(),
+    val estilosDisponibles: List<String> = emptyList(),
+
+    val tallaSeleccionada: String? = null,
+    val materialSeleccionado: String? = null,
+    val estiloSeleccionado: String? = null
+) {
+    val productosFiltrados: List<Producto>
+        get() = productos.filter { p ->
+            (tallaSeleccionada == null || p.talla == tallaSeleccionada) &&
+                    (materialSeleccionado == null || p.material == materialSeleccionado) &&
+                    (estiloSeleccionado == null || p.estilo == estiloSeleccionado)
+        }
+}
+

@@ -12,23 +12,22 @@ class AuthInterceptor(private val session: SessionManager) : Interceptor {
         val request = chain.request()
         val path = request.url.encodedPath
 
-        // Evitar rutas públicas
+
+
         if (path.endsWith("/auth/login") || path.endsWith("/auth/signup")) {
-            println("🌐 [AuthInterceptor] Ruta pública: $path (sin token)")
+            println("Ruta pública: $path (sin token)")
             return chain.proceed(request)
         }
-
-        // Obtener token sincronamente
         val token = runBlocking { session.getAuthToken() }
 
         return if (!token.isNullOrEmpty()) {
-            println("🔑 [AuthInterceptor] Token agregado a $path")
+            println("Token agregado a $path")
             val newRequest = request.newBuilder()
                 .addHeader("Authorization", "Bearer $token")
                 .build()
             chain.proceed(newRequest)
         } else {
-            println("⚠️ [AuthInterceptor] No hay token guardado")
+            println("No hay token guardado")
             chain.proceed(request)
         }
     }

@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ProfileViewModel(app: Application) : AndroidViewModel(app) {
+class
+
+ProfileViewModel(app: Application) : AndroidViewModel(app) {
     private val session = SessionManager(app.applicationContext)
 
     private val _avatarUri = MutableStateFlow<String?>(null)
