@@ -19,15 +19,19 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     private val _ui = MutableStateFlow(AuthUiState())
     val ui: StateFlow<AuthUiState> = _ui
 
+    // 🔹 Soporte de avatar guardado en DataStore
+    val avatarUriFlow = session.avatarUriFlow
+
+    suspend fun saveAvatarUri(uri: String) {
+        session.saveAvatarUri(uri)
+    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
                 _ui.value = _ui.value.copy(isLoading = true, error = null)
 
-                val loginResponse = repo.login(email, password)
-
-                val user = repo.currentUser()
+                val user = repo.login(email, password)
 
                 _ui.value = AuthUiState(user = user, isLoading = false)
             } catch (e: Exception) {
@@ -35,19 +39,13 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
     }
-    val avatarUriFlow = session.avatarUriFlow
 
-    suspend fun saveAvatarUri(uri: String) {
-        session.saveAvatarUri(uri)
-    }
     fun register(name: String, email: String, password: String) {
         viewModelScope.launch {
             try {
                 _ui.value = _ui.value.copy(isLoading = true, error = null)
 
-                val registerResponse = repo.register(name, email, password)
-
-                val user = repo.currentUser()
+                val user = repo.register(name, email, password)
 
                 _ui.value = AuthUiState(user = user, isLoading = false)
             } catch (e: Exception) {
@@ -67,7 +65,6 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-
     fun logout() {
         viewModelScope.launch {
             repo.logout()
@@ -75,6 +72,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 }
+
 
 
 data class AuthUiState(

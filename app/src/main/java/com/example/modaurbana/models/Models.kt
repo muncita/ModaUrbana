@@ -1,7 +1,5 @@
 package com.example.modaurbana.models
 
-import com.google.gson.annotations.SerializedName
-
 data class RegisterRequest(
     val name: String,
     val email: String,
@@ -10,12 +8,12 @@ data class RegisterRequest(
 
 
 data class UserResponse(
-    val id: Int?,
-    @SerializedName("created_at") val createdAt: String?,
+    val id: String?,
     val name: String?,
     val email: String?,
-    @SerializedName("account_id") val accountId: Int?,
-    val role: String?
+    val role: String?,
+    val accountId: Int?,
+    val createdAt: String?
 )
 
 data class Producto(
