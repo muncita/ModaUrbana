@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -13,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
@@ -20,16 +22,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.modaurbana.ui.screens.CartScreen
 import com.example.modaurbana.ui.screens.HomeScreen
 import com.example.modaurbana.ui.screens.LoginScreen
+import com.example.modaurbana.ui.screens.ProductListScreen
 import com.example.modaurbana.ui.screens.ProfileScreen
 import com.example.modaurbana.ui.screens.RegisterScreen
-import com.example.modaurbana.ui.screens.ProductListScreen
-import com.example.modaurbana.ui.screens.CartScreen
 import com.example.modaurbana.viewmodel.AuthViewModel
-import com.example.modaurbana.viewmodel.ProductListViewModel
 import com.example.modaurbana.viewmodel.CartViewModel
+import com.example.modaurbana.viewmodel.ProductListViewModel
 
 @Composable
 fun AppNavGraph(
@@ -38,14 +39,15 @@ fun AppNavGraph(
 ) {
     val navController = rememberNavController()
 
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentDestination = navController.currentDestination()
 
     Scaffold(
         bottomBar = {
-            val currentDestination = navController.currentDestination()
+            // Rutas donde queremos mostrar el BottomBar
             val showBar = currentDestination?.route in listOf(
                 Route.Home.route,
+                Route.ProductList.route,
+                Route.Cart.route,
                 Route.Profile.route
             )
             if (showBar) {
@@ -104,8 +106,9 @@ private fun BottomBar(
 ) {
     NavigationBar {
         val items = listOf(
-            BottomItem("Inicio", Route.Home.route, Icons.Default.Home),
-            BottomItem("Perfil", Route.Profile.route, Icons.Default.Person),
+            BottomItem("Inicio", Route.Home.route, Icons.Filled.Home),
+            BottomItem("Catálogo", Route.ProductList.route, Icons.Filled.ShoppingCart),
+            BottomItem("Perfil", Route.Profile.route, Icons.Filled.Person),
         )
         items.forEach { item ->
             val selected = currentDestination.isInHierarchy(item.route)

@@ -14,44 +14,38 @@ import retrofit2.http.Path
 
 /**
  * Contrato de comunicación con el backend NestJS.
- * Todas las respuestas vienen envueltas en:
- * {
- *   "success": true,
- *   "message": "...",
- *   "data": ...
- * }
+ * Todas las rutas deben incluir el prefijo /api/
  */
 interface ApiService {
 
     // ------------------------------------------------------------
-    //                      AUTENTICACIÓN
+    //                     AUTENTICACIÓN
     // ------------------------------------------------------------
 
-    @POST("auth/login")
+    @POST("api/auth/login")
     suspend fun login(
         @Body body: LoginRequest
     ): LoginResponse
 
-    @POST("auth/register")
+    @POST("api/auth/register")
     suspend fun register(
         @Body body: RegisterRequest
     ): LoginResponse
 
-    @GET("auth/profile")
+    @GET("api/auth/profile")
     suspend fun getCurrentUser(
         @Header("Authorization") bearerToken: String
     ): ApiResponse<UserResponseDto>
 
 
     // ------------------------------------------------------------
-    //                       PRODUCTOS
-    //      (coincide EXACTO con tus rutas Nest: /producto)
+    //                     PRODUCTOS
     // ------------------------------------------------------------
 
-    @GET("producto")
+    @GET("api/producto")
     suspend fun getProductos(): ApiResponse<List<ProductDto>>
 
-    @GET("producto/{id}")
+    @GET("api/producto/{id}")
     suspend fun getProductoPorId(
         @Path("id") id: String
     ): ApiResponse<ProductDto>

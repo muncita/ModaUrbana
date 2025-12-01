@@ -1,11 +1,8 @@
 package com.example.modaurbana.ui.screens
 
 import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.runtime.*
-import androidx.core.content.ContextCompat
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,6 +16,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -26,7 +25,6 @@ import com.example.modaurbana.ui.navigation.Route
 import com.example.modaurbana.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 import java.io.File
-import androidx.core.content.FileProvider
 
 @Composable
 fun ProfileScreen(
@@ -38,8 +36,10 @@ fun ProfileScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // Avatar guardado en SessionManager (AuthViewModel)
     val avatar by vm.avatarUriFlow.collectAsState(initial = "")
 
+    // Si no hay usuario logueado, mandar a login
     LaunchedEffect(ui.user) {
         if (ui.user == null && ui.error == null) {
             navController.navigate(Route.Login.route) { popUpTo(0) }
@@ -48,6 +48,7 @@ fun ProfileScreen(
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
 
+    // ----------- LAUNCHER GALERÍA -----------
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { picked: Uri? ->
@@ -56,6 +57,7 @@ fun ProfileScreen(
         }
     }
 
+    // ----------- LAUNCHER CÁMARA (TakePicture con URI) -----------
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { ok ->
@@ -65,6 +67,7 @@ fun ProfileScreen(
             }
         }
     }
+
     fun createImageUriForCamera(context: Context): Uri {
         val imagesDir = File(context.cacheDir, "images").apply { if (!exists()) mkdirs() }
         val file = File.createTempFile("avatar_", ".jpg", imagesDir)
@@ -72,6 +75,7 @@ fun ProfileScreen(
         return FileProvider.getUriForFile(context, authority, file)
     }
 
+    // ----------- PERMISO DE CÁMARA -----------
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -79,12 +83,15 @@ fun ProfileScreen(
             val uri = createImageUriForCamera(context).also { tempCameraUri = it }
             cameraLauncher.launch(uri)
         } else {
+            // Si quieres, muestra un Toast acá
         }
     }
 
-    OutlinedButton(onClick = {
+    // Función que maneja todo el flujo de "Tomar foto"
+    fun onTakePhotoClick() {
         val hasCamera = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.CAMERA
+            context,
+            Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
 
         if (hasCamera) {
@@ -93,9 +100,9 @@ fun ProfileScreen(
         } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
-    }) {
-        Text("Tomar foto")
     }
+
+    // ------------------ UI ------------------
     Scaffold { innerPadding ->
         Box(
             modifier = Modifier
@@ -134,10 +141,7 @@ fun ProfileScreen(
                     OutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
                         Text("Desde galería")
                     }
-                    OutlinedButton(onClick = {
-                        val uri = createImageUriForCamera(context).also { tempCameraUri = it }
-                        cameraLauncher.launch(uri)
-                    }) {
+                    OutlinedButton(onClick = { onTakePhotoClick() }) {
                         Text("Tomar foto")
                     }
                 }
@@ -155,7 +159,9 @@ fun ProfileScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer
                     )
-                ) { Text("Cerrar sesión") }
+                ) {
+                    Text("Cerrar sesión")
+                }
             }
         }
     }
