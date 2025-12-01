@@ -51,17 +51,44 @@ data class UserResponse(
 // PRODUCTO (MODELO DE DOMINIO USADO EN TU APP)
 // ---------------------------------------------------------
 data class Producto(
-    val id: String?,               // ID Mongo
-    val nombre: String,            // Nombre visible
-    val descripcion: String?,      // Descripción
-    val talla: String?,            // XS/S/M/L etc
-    val material: String?,         // Algodón / Cuero / Mezclilla
-    val estilo: String?,           // Streetwear / Casual
-    val precio: Double?,           // Precio
-    val imagen: String?,           // Imagen principal
-    val imagenThumbnail: String?   // Thumbnail
-)
 
+    @SerializedName("_id")
+    val id: String?,               // ID Mongo
+
+    @SerializedName("nombre")
+    val nombre: String,            // Nombre visible
+
+    @SerializedName("descripcion")
+    val descripcion: String? = null,      // Descripción
+
+    @SerializedName("talla")
+    val talla: String? = null,            // XS/S/M/L etc
+
+    @SerializedName("material")
+    val material: String? = null,         // Algodón / Cuero / Mezclilla
+
+    @SerializedName("estilo")
+    val estilo: String? = null,           // Streetwear / Casual
+
+    @SerializedName("precio")
+    val precio: Double? = null,           // Precio
+
+    // 👇 NUEVOS CAMPOS CON DEFAULT = null
+    @SerializedName("categoria")
+    val categoria: String? = null,        // id de la categoría en Mongo
+
+    @SerializedName("tendencia")
+    val tendencia: Boolean? = null,
+
+    @SerializedName("color")
+    val color: String? = null,
+
+    @SerializedName("imagen")
+    val imagen: String? = null,           // Imagen principal
+
+    @SerializedName("imagenThumbnail")
+    val imagenThumbnail: String? = null   // Thumbnail
+)
 
 // ---------------------------------------------------------
 // ITEM DEL CARRITO

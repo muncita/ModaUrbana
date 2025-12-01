@@ -14,6 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import com.example.modaurbana.models.Producto
 import com.example.modaurbana.ui.navigation.Route
 import com.example.modaurbana.viewmodel.CartViewModel
@@ -83,8 +85,8 @@ fun ProductListScreen(
                     ) {
                         FiltrosProductos(
                             ui = ui,
-                            onChange = { talla, material, estilo ->
-                                productListViewModel.aplicarFiltros(talla, material, estilo)
+                            onChange = { tipo, estilo ->
+                                productListViewModel.aplicarFiltros(tipo, estilo)
                             }
                         )
 
@@ -107,92 +109,52 @@ fun ProductListScreen(
 @Composable
 private fun FiltrosProductos(
     ui: ProductListUiState,
-    onChange: (String?, String?, String?) -> Unit
+    onChange: (String?, String?) -> Unit // tipoPrenda, estilo
 ) {
-    var tallaExpanded by remember { mutableStateOf(false) }
-    var materialExpanded by remember { mutableStateOf(false) }
+    var tipoExpanded by remember { mutableStateOf(false) }
     var estiloExpanded by remember { mutableStateOf(false) }
 
     Column {
         Text("Filtros", fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // TALLA
-            Box(modifier = Modifier.weight(1f)) {
-                ExposedDropdownMenuBox(
-                    expanded = tallaExpanded,
-                    onExpandedChange = { tallaExpanded = !tallaExpanded }
+        // 🔹 TIPO DE PRENDA (Hoodies, Poleras, etc.)
+        Box(modifier = Modifier.fillMaxWidth()) {
+            ExposedDropdownMenuBox(
+                expanded = tipoExpanded,
+                onExpandedChange = { tipoExpanded = !tipoExpanded }
+            ) {
+                TextField(
+                    value = ui.tipoSeleccionado ?: "Tipo de prenda",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Tipo de prenda") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = tipoExpanded)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = tipoExpanded,
+                    onDismissRequest = { tipoExpanded = false }
                 ) {
-                    TextField(
-                        value = ui.tallaSeleccionada ?: "Talla",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Talla") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = tallaExpanded) },
-                        modifier = Modifier.menuAnchor()
+                    DropdownMenuItem(
+                        text = { Text("Todos") },
+                        onClick = {
+                            tipoExpanded = false
+                            onChange(null, ui.estiloSeleccionado)
+                        }
                     )
-                    ExposedDropdownMenu(
-                        expanded = tallaExpanded,
-                        onDismissRequest = { tallaExpanded = false }
-                    ) {
+                    ui.tiposDisponibles.forEach { tipo ->
                         DropdownMenuItem(
-                            text = { Text("Todas") },
+                            text = { Text(tipo) },
                             onClick = {
-                                tallaExpanded = false
-                                onChange(null, ui.materialSeleccionado, ui.estiloSeleccionado)
+                                tipoExpanded = false
+                                onChange(tipo, ui.estiloSeleccionado)
                             }
                         )
-                        ui.tallasDisponibles.forEach { talla ->
-                            DropdownMenuItem(
-                                text = { Text(talla) },
-                                onClick = {
-                                    tallaExpanded = false
-                                    onChange(talla, ui.materialSeleccionado, ui.estiloSeleccionado)
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // MATERIAL
-            Box(modifier = Modifier.weight(1f)) {
-                ExposedDropdownMenuBox(
-                    expanded = materialExpanded,
-                    onExpandedChange = { materialExpanded = !materialExpanded }
-                ) {
-                    TextField(
-                        value = ui.materialSeleccionado ?: "Material",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Material") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = materialExpanded) },
-                        modifier = Modifier.menuAnchor()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = materialExpanded,
-                        onDismissRequest = { materialExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Todos") },
-                            onClick = {
-                                materialExpanded = false
-                                onChange(ui.tallaSeleccionada, null, ui.estiloSeleccionado)
-                            }
-                        )
-                        ui.materialesDisponibles.forEach { material ->
-                            DropdownMenuItem(
-                                text = { Text(material) },
-                                onClick = {
-                                    materialExpanded = false
-                                    onChange(ui.tallaSeleccionada, material, ui.estiloSeleccionado)
-                                }
-                            )
-                        }
                     }
                 }
             }
@@ -200,7 +162,7 @@ private fun FiltrosProductos(
 
         Spacer(Modifier.height(8.dp))
 
-        // ESTILO
+        // 🔹 ESTILO (Streetwear, Minimalista, etc.)
         Box(modifier = Modifier.fillMaxWidth()) {
             ExposedDropdownMenuBox(
                 expanded = estiloExpanded,
@@ -211,7 +173,9 @@ private fun FiltrosProductos(
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Estilo") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = estiloExpanded) },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = estiloExpanded)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor()
@@ -224,7 +188,7 @@ private fun FiltrosProductos(
                         text = { Text("Todos") },
                         onClick = {
                             estiloExpanded = false
-                            onChange(ui.tallaSeleccionada, ui.materialSeleccionado, null)
+                            onChange(ui.tipoSeleccionado, null)
                         }
                     )
                     ui.estilosDisponibles.forEach { estilo ->
@@ -232,7 +196,7 @@ private fun FiltrosProductos(
                             text = { Text(estilo) },
                             onClick = {
                                 estiloExpanded = false
-                                onChange(ui.tallaSeleccionada, ui.materialSeleccionado, estilo)
+                                onChange(ui.tipoSeleccionado, estilo)
                             }
                         )
                     }
@@ -263,27 +227,40 @@ private fun ListaProductos(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { /* Podríamos abrir detalle más adelante */ }
+                        .clickable { /* Detalle más adelante */ }
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(producto.nombre, fontWeight = FontWeight.Bold)
-                        producto.descripcion?.let {
+                    Column {
+                        // 🔹 IMAGEN DEL PRODUCTO
+                        AsyncImage(
+                            model = producto.imagen,
+                            contentDescription = producto.nombre,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(320.dp),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        // 🔹 TEXTO Y BOTÓN
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(producto.nombre, fontWeight = FontWeight.Bold)
+                            producto.descripcion?.let {
+                                Spacer(Modifier.height(4.dp))
+                                Text(it)
+                            }
                             Spacer(Modifier.height(4.dp))
-                            Text(it)
-                        }
-                        Spacer(Modifier.height(4.dp))
-                        Text("Talla: ${producto.talla ?: "-"}")
-                        Text("Material: ${producto.material ?: "-"}")
-                        Text("Estilo: ${producto.estilo ?: "-"}")
-                        producto.precio?.let {
-                            Spacer(Modifier.height(4.dp))
-                            Text("Precio: $it")
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Button(
-                            onClick = { onAgregarAlCarrito(producto) }
-                        ) {
-                            Text("Agregar al carrito")
+                            Text("Talla: ${producto.talla ?: "-"}")
+                            Text("Material: ${producto.material ?: "-"}")
+                            Text("Estilo: ${producto.estilo ?: "-"}")
+                            producto.precio?.let {
+                                Spacer(Modifier.height(4.dp))
+                                Text("Precio: $it")
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Button(
+                                onClick = { onAgregarAlCarrito(producto) }
+                            ) {
+                                Text("Agregar al carrito")
+                            }
                         }
                     }
                 }
@@ -291,4 +268,3 @@ private fun ListaProductos(
         }
     }
 }
-

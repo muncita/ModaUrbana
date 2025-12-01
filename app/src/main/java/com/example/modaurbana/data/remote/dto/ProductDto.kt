@@ -5,10 +5,6 @@ import com.google.gson.annotations.SerializedName
 
 /**
  * DTO que mapea EXACTAMENTE lo que devuelve el microservicio de producto (NestJS + Mongo).
- *
- * Importante:
- *  - Mongoose expone el ID como "_id"
- *  - El resto de campos respetan los nombres del schema: nombre, descripcion, talla, material, estilo, precio, imagen, imagenThumbnail, etc.
  */
 data class ProductDto(
     @SerializedName("_id") val id: String?,
@@ -18,10 +14,20 @@ data class ProductDto(
     @SerializedName("material") val material: String? = null,
     @SerializedName("estilo") val estilo: String? = null,
     @SerializedName("precio") val precio: Double? = null,
+
+    // 👇 nuevos campos que también puede devolver la API
+    @SerializedName("categoria") val categoria: CategoriaDto? = null,
+    @SerializedName("tendencia") val tendencia: Boolean? = null,
+    @SerializedName("color") val color: String? = null,
+
     @SerializedName("imagen") val imagen: String? = null,
     @SerializedName("imagenThumbnail") val imagenThumbnail: String? = null
 )
 
+data class CategoriaDto(
+    @SerializedName("_id") val id: String?,
+    @SerializedName("nombre") val nombre: String? = null
+)
 /**
  * Mapeo DTO -> dominio
  */
@@ -33,7 +39,9 @@ fun ProductDto.toDomain(): Producto = Producto(
     material = material,
     estilo = estilo,
     precio = precio,
+    categoria = categoria?.id,
+    tendencia = tendencia,
+    color = color,
     imagen = imagen,
     imagenThumbnail = imagenThumbnail
 )
-

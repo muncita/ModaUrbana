@@ -33,12 +33,21 @@ class ProductListViewModel(app: Application) : AndroidViewModel(app) {
 
                 val productos = repo.getProductos()   // ← YA ENVÍA TOKEN
 
+                // Sacamos tipos (a partir de categoria) y estilos disponibles
+                val tipos = productos
+                    .mapNotNull { mapCategoriaToTipo(it.categoria) }
+                    .distinct()
+
+                val estilos = productos
+                    .mapNotNull { it.estilo }
+                    .distinct()
+
                 _ui.value = _ui.value.copy(
                     isLoading = false,
                     productos = productos,
-                    tallasDisponibles = productos.mapNotNull { it.talla }.distinct(),
-                    materialesDisponibles = productos.mapNotNull { it.material }.distinct(),
-                    estilosDisponibles = productos.mapNotNull { it.estilo }.distinct()
+                    productosFiltrados = productos,   // al inicio se muestran todos
+                    tiposDisponibles = tipos,
+                    estilosDisponibles = estilos
                 )
             } catch (e: Exception) {
                 _ui.value = _ui.value.copy(
@@ -49,37 +58,62 @@ class ProductListViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * Mapea el id de categoria (String?) al "tipo de prenda"
+     * según los _id que tienes en la colección categorias.
+     */
+    private fun mapCategoriaToTipo(categoriaId: String?): String? {
+        return when (categoriaId) {
+            "673000000000000000000001" -> "Hoodies"
+            "673000000000000000000002" -> "Poleras"
+            "673000000000000000000003" -> "Pantalones"
+            "673000000000000000000004" -> "Zapatillas"
+            "673000000000000000000005" -> "Accesorios"
+            else -> null
+        }
+    }
+
+    /**
+     * Aplica filtros por tipo de prenda y estilo.
+     */
     fun aplicarFiltros(
-        talla: String?,
-        material: String?,
+        tipoPrenda: String?,
         estilo: String?
     ) {
-        val current = _ui.value
-        _ui.value = current.copy(
-            tallaSeleccionada = talla,
-            materialSeleccionado = material,
-            estiloSeleccionado = estilo
+        val productos = _ui.value.productos
+
+        val filtrados = productos.filter { p ->
+            val tipo = mapCategoriaToTipo(p.categoria)
+
+            (tipoPrenda == null || tipo == tipoPrenda) &&
+                    (estilo == null || p.estilo == estilo)
+        }
+
+        _ui.value = _ui.value.copy(
+            tipoSeleccionado = tipoPrenda,
+            estiloSeleccionado = estilo,
+            productosFiltrados = filtrados
         )
     }
 }
 
+/**
+ * UI State del catálogo.
+ * Ya no usamos talla/material, solo:
+ * - tipo de prenda
+ * - estilo
+ */
 data class ProductListUiState(
     val isLoading: Boolean = false,
     val productos: List<Producto> = emptyList(),
+    val productosFiltrados: List<Producto> = emptyList(),
     val error: String? = null,
 
-    val tallasDisponibles: List<String> = emptyList(),
-    val materialesDisponibles: List<String> = emptyList(),
-    val estilosDisponibles: List<String> = emptyList(),
+    // Tipos de prenda (Hoodies, Poleras, etc.)
+    val tiposDisponibles: List<String> = emptyList(),
+    val tipoSeleccionado: String? = null,
 
-    val tallaSeleccionada: String? = null,
-    val materialSeleccionado: String? = null,
+    // Estilos (Streetwear, Minimalista, etc.)
+    val estilosDisponibles: List<String> = emptyList(),
     val estiloSeleccionado: String? = null
-) {
-    val productosFiltrados: List<Producto>
-        get() = productos.filter { p ->
-            (tallaSeleccionada == null || p.talla == tallaSeleccionada) &&
-                    (materialSeleccionado == null || p.material == materialSeleccionado) &&
-                    (estiloSeleccionado == null || p.estilo == estiloSeleccionado)
-        }
-}
+)
