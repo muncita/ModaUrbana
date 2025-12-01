@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private const val BASE_URL = "https://modaurbanaapp-api.onrender.com/api"
+    private const val BASE_URL = "https://modaurbanaapp-api.onrender.com/api/"
 
     private val logging by lazy {
         HttpLoggingInterceptor().apply {
