@@ -39,14 +39,18 @@ interface ApiService {
 
 
     // ------------------------------------------------------------
-    //                     PRODUCTOS
+    //                     PRODUCTOS (PROTEGIDOS)
     // ------------------------------------------------------------
 
+    // Necesitan JWT: Authorization: Bearer <token>
     @GET("api/producto")
-    suspend fun getProductos(): ApiResponse<List<ProductDto>>
+    suspend fun getProductos(
+        @Header("Authorization") bearerToken: String
+    ): ApiResponse<List<ProductDto>>
 
     @GET("api/producto/{id}")
     suspend fun getProductoPorId(
+        @Header("Authorization") bearerToken: String,
         @Path("id") id: String
     ): ApiResponse<ProductDto>
 }

@@ -12,7 +12,7 @@ object RetrofitClient {
     // private const val BASE_URL = "http://10.0.2.2:3012/api/"
 
     // ➜ PARA PRODUCCIÓN EN RENDER
-    private const val BASE_URL = "https://modaurbanaapp-api.onrender.com"
+    private const val BASE_URL = "https://modaurbanaapp-api.onrender.com/"
 
     private val logging by lazy {
         HttpLoggingInterceptor().apply {

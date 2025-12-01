@@ -1,16 +1,20 @@
 package com.example.modaurbana.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.modaurbana.data.local.SessionManager
 import com.example.modaurbana.models.Producto
 import com.example.modaurbana.repository.ProductRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ProductListViewModel : ViewModel() {
+class ProductListViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val repo = ProductRepository()
+    private val repo = ProductRepository(
+        SessionManager(app.applicationContext)
+    )
 
     private val _ui = MutableStateFlow(ProductListUiState())
     val ui: StateFlow<ProductListUiState> = _ui
@@ -22,9 +26,12 @@ class ProductListViewModel : ViewModel() {
     fun loadProductos() {
         viewModelScope.launch {
             try {
-                _ui.value = _ui.value.copy(isLoading = true, error = null)
+                _ui.value = _ui.value.copy(
+                    isLoading = true,
+                    error = null
+                )
 
-                val productos = repo.getProductos()
+                val productos = repo.getProductos()   // ← YA ENVÍA TOKEN
 
                 _ui.value = _ui.value.copy(
                     isLoading = false,
@@ -76,4 +83,3 @@ data class ProductListUiState(
                     (estiloSeleccionado == null || p.estilo == estiloSeleccionado)
         }
 }
-
