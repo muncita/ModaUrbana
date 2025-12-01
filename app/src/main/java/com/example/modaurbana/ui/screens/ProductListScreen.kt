@@ -4,32 +4,55 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
 import com.example.modaurbana.models.Producto
 import com.example.modaurbana.ui.navigation.Route
 import com.example.modaurbana.viewmodel.CartViewModel
 import com.example.modaurbana.viewmodel.ProductListUiState
 import com.example.modaurbana.viewmodel.ProductListViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductListScreen(
     navController: NavHostController,
     productListViewModel: ProductListViewModel = viewModel(),
-    cartViewModel: CartViewModel = viewModel()
+    cartViewModel: CartViewModel
 ) {
     val ui by productListViewModel.ui.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    val cartUi by cartViewModel.ui.collectAsState()
+    val totalItems = cartUi.items.sumOf { it.quantity }
 
     Scaffold(
         topBar = {
@@ -37,14 +60,25 @@ fun ProductListScreen(
                 title = { Text("Catálogo de productos") },
                 actions = {
                     IconButton(onClick = { navController.navigate(Route.Cart.route) }) {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "Ver carrito"
-                        )
+                        BadgedBox(
+                            badge = {
+                                if (totalItems > 0) {
+                                    Badge {
+                                        Text(totalItems.toString())
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = "Ver carrito"
+                            )
+                        }
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -96,6 +130,12 @@ fun ProductListScreen(
                             productos = ui.productosFiltrados,
                             onAgregarAlCarrito = { producto ->
                                 cartViewModel.addToCart(producto)
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = "Producto agregado al carrito",
+                                        withDismissAction = false
+                                    )
+                                }
                             }
                         )
                     }
@@ -109,7 +149,7 @@ fun ProductListScreen(
 @Composable
 private fun FiltrosProductos(
     ui: ProductListUiState,
-    onChange: (String?, String?) -> Unit // tipoPrenda, estilo
+    onChange: (String?, String?) -> Unit
 ) {
     var tipoExpanded by remember { mutableStateOf(false) }
     var estiloExpanded by remember { mutableStateOf(false) }
@@ -118,7 +158,7 @@ private fun FiltrosProductos(
         Text("Filtros", fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
 
-        // 🔹 TIPO DE PRENDA (Hoodies, Poleras, etc.)
+        // 🔹 TIPO DE PRENDA
         Box(modifier = Modifier.fillMaxWidth()) {
             ExposedDropdownMenuBox(
                 expanded = tipoExpanded,
@@ -162,7 +202,7 @@ private fun FiltrosProductos(
 
         Spacer(Modifier.height(8.dp))
 
-        // 🔹 ESTILO (Streetwear, Minimalista, etc.)
+        // 🔹 ESTILO
         Box(modifier = Modifier.fillMaxWidth()) {
             ExposedDropdownMenuBox(
                 expanded = estiloExpanded,
@@ -227,10 +267,10 @@ private fun ListaProductos(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { /* Detalle más adelante */ }
+                        .clickable { }
                 ) {
                     Column {
-                        // 🔹 IMAGEN DEL PRODUCTO
+
                         AsyncImage(
                             model = producto.imagen,
                             contentDescription = producto.nombre,
@@ -240,7 +280,7 @@ private fun ListaProductos(
                             contentScale = ContentScale.Crop
                         )
 
-                        // 🔹 TEXTO Y BOTÓN
+                        // Texto y botón
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(producto.nombre, fontWeight = FontWeight.Bold)
                             producto.descripcion?.let {
@@ -257,7 +297,9 @@ private fun ListaProductos(
                             }
                             Spacer(Modifier.height(8.dp))
                             Button(
-                                onClick = { onAgregarAlCarrito(producto) }
+                                onClick = {
+                                    onAgregarAlCarrito(producto)
+                                }
                             ) {
                                 Text("Agregar al carrito")
                             }

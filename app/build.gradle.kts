@@ -44,74 +44,75 @@ android {
 }
 
 dependencies {
+    // Core Android / Lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.foundation)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
-    implementation("androidx.compose.material:material-icons-extended:1.5.0")
-    implementation("androidx.navigation:navigation-compose:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
-    implementation("androidx.activity:activity-compose:1.7.2")
-    implementation("androidx.compose.material3:material3:1.1.2")
+
+    // ✅ Compose BOM (solo uno, moderno)
+    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
+
+    // ✅ Módulos de Compose usando el BOM
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Tests básicos Compose
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // ViewModel / Lifecycle
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+
+    // Navigation Compose (deja solo una versión)
+    implementation("androidx.navigation:navigation-compose:2.8.3")
+
+    // Activity Compose (ya la tienes via libs, pero si quieres explícita, mantén solo una)
+    implementation("androidx.activity:activity-compose:1.9.3")
+
+    // Texto extra de Compose (opcional)
+    implementation("androidx.compose.ui:ui-text")
+
     // OkHttp - Cliente HTTP
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    implementation("androidx.navigation:navigation-compose:2.8.3")
-
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
-
-    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
-    implementation("androidx.navigation:navigation-compose")
-    implementation("androidx.compose.ui:ui-text")
     // Retrofit - Cliente REST
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
-    // Coroutines (si no las tienes)
+    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
     // DataStore - Para guardar tokens
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    // Coil - Para cargar imágenes desde URLs (opcional)
+    // Coil - Para cargar imágenes desde URLs
     implementation("io.coil-kt:coil-compose:2.6.0")
 
-    //Testing - Junit
-
+    // Testing - JUnit
     testImplementation("junit:junit:4.13.2")
 
     // Testing - Coroutines
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 
-    testImplementation("org.jetbrains.kotlinx-coroutines-test:1.7.3")
-
-    //testing - mockk
-
+    // Testing - Mockk
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("io.mockk:mockk-android:1.13.8")
 
-    //testin turbine
+    // Testing - Turbine
     testImplementation("app.cash.turbine:turbine:1.0.0")
 
-    //testing core
+    // Testing - Core testing
     testImplementation("androidx.arch.core:core-testing:2.2.0")
 
-    //android testing
-
+    // Android instrumented tests
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-
 }

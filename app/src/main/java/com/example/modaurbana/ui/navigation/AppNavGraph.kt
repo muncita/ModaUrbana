@@ -39,11 +39,13 @@ fun AppNavGraph(
 ) {
     val navController = rememberNavController()
 
+    // ✅ CartViewModel compartido para toda la app
+    val cartVm: CartViewModel = viewModel()
+
     val currentDestination = navController.currentDestination()
 
     Scaffold(
         bottomBar = {
-            // Rutas donde queremos mostrar el BottomBar
             val showBar = currentDestination?.route in listOf(
                 Route.Home.route,
                 Route.ProductList.route,
@@ -51,7 +53,7 @@ fun AppNavGraph(
                 Route.Profile.route
             )
             if (showBar) {
-                BottomBar(navController, currentDestination)
+                BottomBar(navController, currentDestination /*, cartVm */)
             }
         }
     ) { innerPadding ->
@@ -77,14 +79,19 @@ fun AppNavGraph(
                 )
             }
             composable(Route.Home.route) {
-                HomeScreen(navController = navController, vm = vm)
+                HomeScreen(
+                    navController = navController,
+                    vm = vm
+                )
             }
             composable(Route.Profile.route) {
-                ProfileScreen(navController = navController, vm = vm)
+                ProfileScreen(
+                    navController = navController,
+                    vm = vm
+                )
             }
             composable(Route.ProductList.route) {
                 val productVm: ProductListViewModel = viewModel()
-                val cartVm: CartViewModel = viewModel()
                 ProductListScreen(
                     navController = navController,
                     productListViewModel = productVm,
@@ -92,8 +99,10 @@ fun AppNavGraph(
                 )
             }
             composable(Route.Cart.route) {
-                val cartVm: CartViewModel = viewModel()
-                CartScreen(navController = navController, vm = cartVm)
+                CartScreen(
+                    navController = navController,
+                    vm = cartVm
+                )
             }
         }
     }
