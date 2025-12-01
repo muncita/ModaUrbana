@@ -4,6 +4,7 @@ import com.example.modaurbana.data.remote.dto.LoginRequest
 import com.example.modaurbana.data.remote.dto.LoginResponse
 import com.example.modaurbana.data.remote.dto.ProductDto
 import com.example.modaurbana.data.remote.dto.UserResponseDto
+import com.example.modaurbana.models.ApiResponse
 import com.example.modaurbana.models.RegisterRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -12,18 +13,20 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 /**
- * Wrapper genérico de respuestas del backend Nest:
- * { "success": true, "message": "...", "data": ... }
+ * Contrato de comunicación con el backend NestJS.
+ * Todas las respuestas vienen envueltas en:
+ * {
+ *   "success": true,
+ *   "message": "...",
+ *   "data": ...
+ * }
  */
-data class ApiResponse<T>(
-    val success: Boolean,
-    val message: String?,
-    val data: T?
-)
-
 interface ApiService {
 
-    // ---------- AUTH ----------
+    // ------------------------------------------------------------
+    //                      AUTENTICACIÓN
+    // ------------------------------------------------------------
+
     @POST("auth/login")
     suspend fun login(
         @Body body: LoginRequest
@@ -39,11 +42,16 @@ interface ApiService {
         @Header("Authorization") bearerToken: String
     ): ApiResponse<UserResponseDto>
 
-    // ---------- PRODUCTOS ----------
-    @GET("products")
+
+    // ------------------------------------------------------------
+    //                       PRODUCTOS
+    //      (coincide EXACTO con tus rutas Nest: /producto)
+    // ------------------------------------------------------------
+
+    @GET("producto")
     suspend fun getProductos(): ApiResponse<List<ProductDto>>
 
-    @GET("products/{id}")
+    @GET("producto/{id}")
     suspend fun getProductoPorId(
         @Path("id") id: String
     ): ApiResponse<ProductDto>

@@ -11,11 +11,18 @@ class UserRepository {
     private val api = RetrofitClient.instance
 
     suspend fun login(email: String, password: String): LoginResponse {
-        return api.login(LoginRequest(email = email, password = password))
+        val body = LoginRequest(email = email, password = password)
+        return api.login(body)
     }
 
-    suspend fun register(name: String, email: String, password: String): LoginResponse {
-        return api.register(RegisterRequest(name = name, email = email, password = password))
+    suspend fun register(nombre: String, email: String, password: String): LoginResponse {
+        val body = RegisterRequest(
+            nombre = nombre,
+            email = email,
+            password = password,
+            role = "CLIENTE" // por si acaso, aunque ya tiene default
+        )
+        return api.register(body)
     }
 
     suspend fun getCurrentUser(token: String): UserResponseDto {
