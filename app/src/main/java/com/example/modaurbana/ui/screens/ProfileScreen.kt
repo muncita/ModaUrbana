@@ -125,7 +125,7 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // 🟣 AVATAR
+
             ProfileAvatar(
                 avatar = avatar,
                 context = context
@@ -133,7 +133,7 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // 🖼 Botones foto (misma funcionalidad que antes)
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -166,7 +166,7 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // 🚪 Cerrar sesión (misma lógica que antes)
+
             Text(
                 text = "¿Quieres cerrar tu sesión?",
                 style = MaterialTheme.typography.bodyMedium

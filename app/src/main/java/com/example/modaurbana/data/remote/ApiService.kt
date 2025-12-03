@@ -19,8 +19,6 @@ import retrofit2.http.Path
 interface ApiService {
 
     // ------------------------------------------------------------
-    //                     AUTENTICACIÓN
-    // ------------------------------------------------------------
 
     @POST("api/auth/login")
     suspend fun login(
@@ -37,12 +35,9 @@ interface ApiService {
         @Header("Authorization") bearerToken: String
     ): ApiResponse<UserResponseDto>
 
-
-    // ------------------------------------------------------------
-    //                     PRODUCTOS (PROTEGIDOS)
     // ------------------------------------------------------------
 
-    // Necesitan JWT: Authorization: Bearer <token>
+
     @GET("api/producto")
     suspend fun getProductos(
         @Header("Authorization") bearerToken: String

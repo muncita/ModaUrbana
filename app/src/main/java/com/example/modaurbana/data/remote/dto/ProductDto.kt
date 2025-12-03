@@ -3,9 +3,7 @@ package com.example.modaurbana.data.remote.dto
 import com.example.modaurbana.models.Producto
 import com.google.gson.annotations.SerializedName
 
-/**
- * DTO que mapea EXACTAMENTE lo que devuelve el microservicio de producto (NestJS + Mongo).
- */
+
 data class ProductDto(
     @SerializedName("_id") val id: String?,
     @SerializedName("nombre") val nombre: String,

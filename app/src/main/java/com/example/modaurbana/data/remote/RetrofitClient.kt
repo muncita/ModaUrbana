@@ -8,10 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // ➜ PARA EVALUACIÓN LOCAL (emulador)
-    // private const val BASE_URL = "http://10.0.2.2:3012/api/"
 
-    // ➜ PARA PRODUCCIÓN EN RENDER
     private const val BASE_URL = "https://modaurbanaapp-api.onrender.com/"
 
     private val logging by lazy {
@@ -32,7 +29,7 @@ object RetrofitClient {
 
     val instance: ApiService by lazy {
         Retrofit.Builder()
-            .baseUrl(BASE_URL) // IMPORTANTE: termina en "/"
+            .baseUrl(BASE_URL)
             .client(okHttp)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
