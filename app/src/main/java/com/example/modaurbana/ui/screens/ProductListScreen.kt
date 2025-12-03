@@ -49,6 +49,44 @@ import com.example.modaurbana.viewmodel.ProductListUiState
 import com.example.modaurbana.viewmodel.ProductListViewModel
 import kotlinx.coroutines.launch
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.modaurbana.R
+import kotlinx.coroutines.launch
+
+
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductListScreen(
@@ -69,7 +107,19 @@ fun ProductListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Catálogo de productos") },
+                title = {
+                    // Logo centrado, estilo Nube/HumanMob
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_modaurbana_logo),
+                            contentDescription = "Logo ModaUrbana",
+                            modifier = Modifier.height(28.dp)
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = { navController.navigate(Route.Cart.route) }) {
                         BadgedBox(
@@ -148,7 +198,7 @@ fun ProductListScreen(
 
                         Spacer(Modifier.height(12.dp))
 
-                        // Filtros por tipo / estilo
+                        // Filtros por tipo / estilo en horizontal
                         FiltrosProductos(
                             ui = ui,
                             onChange = { tipo, estilo ->
@@ -188,7 +238,7 @@ private fun SearchBarCatalogo(
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
         label = { Text("Buscar producto") },
-        placeholder = { Text("Ej: Hoodie negro, polera, jeans…") },
+        placeholder = { Text("Ej: hoodie negro, polera, jeans…") },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
@@ -208,90 +258,118 @@ private fun FiltrosProductos(
     var estiloExpanded by remember { mutableStateOf(false) }
 
     Column {
-        Text("Filtros", fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-
-        // 🔹 TIPO DE PRENDA
-        Box(modifier = Modifier.fillMaxWidth()) {
-            ExposedDropdownMenuBox(
-                expanded = tipoExpanded,
-                onExpandedChange = { tipoExpanded = !tipoExpanded }
-            ) {
-                TextField(
-                    value = ui.tipoSeleccionado ?: "Tipo de prenda",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Tipo de prenda") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = tipoExpanded)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    expanded = tipoExpanded,
-                    onDismissRequest = { tipoExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Todos") },
-                        onClick = {
-                            tipoExpanded = false
-                            onChange(null, ui.estiloSeleccionado)
-                        }
-                    )
-                    ui.tiposDisponibles.forEach { tipo ->
-                        DropdownMenuItem(
-                            text = { Text(tipo) },
-                            onClick = {
-                                tipoExpanded = false
-                                onChange(tipo, ui.estiloSeleccionado)
-                            }
-                        )
-                    }
-                }
+        // Encabezado similar a “FILTRAR / ORDENAR”
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Filtrar por",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            TextButton(onClick = {
+                // limpiar filtros
+                onChange(null, null)
+            }) {
+                Text("Limpiar filtros")
             }
         }
 
         Spacer(Modifier.height(8.dp))
 
-        // 🔹 ESTILO
-        Box(modifier = Modifier.fillMaxWidth()) {
-            ExposedDropdownMenuBox(
-                expanded = estiloExpanded,
-                onExpandedChange = { estiloExpanded = !estiloExpanded }
+        // Fila con dos dropdowns lado a lado
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // 🔹 TIPO DE PRENDA
+            Box(
+                modifier = Modifier
+                    .weight(1f)
             ) {
-                TextField(
-                    value = ui.estiloSeleccionado ?: "Estilo",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Estilo") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = estiloExpanded)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    expanded = estiloExpanded,
-                    onDismissRequest = { estiloExpanded = false }
+                ExposedDropdownMenuBox(
+                    expanded = tipoExpanded,
+                    onExpandedChange = { tipoExpanded = !tipoExpanded }
                 ) {
-                    DropdownMenuItem(
-                        text = { Text("Todos") },
-                        onClick = {
-                            estiloExpanded = false
-                            onChange(ui.tipoSeleccionado, null)
-                        }
+                    TextField(
+                        value = ui.tipoSeleccionado ?: "Tipo de prenda",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Tipo de prenda") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = tipoExpanded)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
                     )
-                    ui.estilosDisponibles.forEach { estilo ->
+                    ExposedDropdownMenu(
+                        expanded = tipoExpanded,
+                        onDismissRequest = { tipoExpanded = false }
+                    ) {
                         DropdownMenuItem(
-                            text = { Text(estilo) },
+                            text = { Text("Todos") },
                             onClick = {
-                                estiloExpanded = false
-                                onChange(ui.tipoSeleccionado, estilo)
+                                tipoExpanded = false
+                                onChange(null, ui.estiloSeleccionado)
                             }
                         )
+                        ui.tiposDisponibles.forEach { tipo ->
+                            DropdownMenuItem(
+                                text = { Text(tipo) },
+                                onClick = {
+                                    tipoExpanded = false
+                                    onChange(tipo, ui.estiloSeleccionado)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 🔹 ESTILO
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                ExposedDropdownMenuBox(
+                    expanded = estiloExpanded,
+                    onExpandedChange = { estiloExpanded = !estiloExpanded }
+                ) {
+                    TextField(
+                        value = ui.estiloSeleccionado ?: "Estilo",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Estilo") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = estiloExpanded)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = estiloExpanded,
+                        onDismissRequest = { estiloExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Todos") },
+                            onClick = {
+                                estiloExpanded = false
+                                onChange(ui.tipoSeleccionado, null)
+                            }
+                        )
+                        ui.estilosDisponibles.forEach { estilo ->
+                            DropdownMenuItem(
+                                text = { Text(estilo) },
+                                onClick = {
+                                    estiloExpanded = false
+                                    onChange(ui.tipoSeleccionado, estilo)
+                                }
+                            )
+                        }
                     }
                 }
             }

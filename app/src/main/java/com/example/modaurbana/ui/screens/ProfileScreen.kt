@@ -6,8 +6,12 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,11 +25,13 @@ import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.modaurbana.R
 import com.example.modaurbana.ui.navigation.Route
 import com.example.modaurbana.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 import java.io.File
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
@@ -83,7 +89,7 @@ fun ProfileScreen(
             val uri = createImageUriForCamera(context).also { tempCameraUri = it }
             cameraLauncher.launch(uri)
         } else {
-            // Si quieres, muestra un Toast acá
+            // aquí podrías mostrar un Toast si quieres
         }
     }
 
@@ -103,66 +109,161 @@ fun ProfileScreen(
     }
 
     // ------------------ UI ------------------
-    Scaffold { innerPadding ->
-        Box(
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Perfil") }
+            )
+        }
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(contentPadding)
                 .padding(innerPadding)
-                .padding(16.dp),
-            contentAlignment = Alignment.TopCenter
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+
+            // 🟣 AVATAR
+            ProfileAvatar(
+                avatar = avatar,
+                context = context
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // 🖼 Botones foto (misma funcionalidad que antes)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    "Perfil",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(avatar.ifBlank { null })
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Avatar",
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
-                        Text("Desde galería")
-                    }
-                    OutlinedButton(onClick = { onTakePhotoClick() }) {
-                        Text("Tomar foto")
-                    }
+                OutlinedButton(
+                    onClick = { galleryLauncher.launch("image/*") },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(999.dp)
+                ) {
+                    Text("Desde galería")
                 }
 
-                Spacer(Modifier.height(24.dp))
-                Text("Nombre: ${ui.user?.name ?: "-"}")
-                Text("Correo: ${ui.user?.email ?: "-"}")
-
-                Spacer(Modifier.height(24.dp))
-                Button(
-                    onClick = {
-                        vm.logout()
-                        navController.navigate(Route.Login.route) { popUpTo(0) }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
+                OutlinedButton(
+                    onClick = { onTakePhotoClick() },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(999.dp)
                 ) {
-                    Text("Cerrar sesión")
+                    Text("Tomar foto")
                 }
             }
+
+            Spacer(Modifier.height(24.dp))
+
+            // 📄 Datos del usuario en una card
+            ProfileInfoCard(
+                nombre = ui.user?.name ?: "-",
+                email = ui.user?.email ?: "-"
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            // 🚪 Cerrar sesión (misma lógica que antes)
+            Text(
+                text = "¿Quieres cerrar tu sesión?",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Button(
+                onClick = {
+                    vm.logout()
+                    navController.navigate(Route.Login.route) { popUpTo(0) }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(999.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
+            ) {
+                Text("Cerrar sesión")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileAvatar(
+    avatar: String,
+    context: Context
+) {
+    val hasAvatar = avatar.isNotBlank()
+
+    Box(
+        modifier = Modifier
+            .size(120.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        if (hasAvatar) {
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(avatar)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Avatar",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Avatar por defecto",
+                modifier = Modifier.size(60.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProfileInfoCard(
+    nombre: String,
+    email: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Datos de tu cuenta",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "Nombre: $nombre",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Correo: $email",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
