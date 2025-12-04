@@ -3,12 +3,11 @@ package com.example.modaurbana.models
 import com.google.gson.annotations.SerializedName
 
 // ---------------------------------------------------------
-// REGISTER REQUEST — Debe alinearse EXACTO con RegisterDto Nest
-// ---------------------------------------------------------
+
 data class RegisterRequest(
 
     @SerializedName("nombre")
-    val nombre: String,                 // Nest pide "nombre", no "name"
+    val nombre: String,
 
     @SerializedName("email")
     val email: String,
@@ -34,48 +33,44 @@ data class RegisterRequest(
 )
 
 
-// ---------------------------------------------------------
-// USER RESPONSE — Lo que devuelve login/register/profile
-// ---------------------------------------------------------
+// --------------------------------------------------------
 data class UserResponse(
     val id: String?,
     val name: String?,
     val email: String?,
     val role: String?,
-    val accountId: Int? = null,   // tu backend no usa esto pero lo mantenemos opcional
+    val accountId: Int? = null,
     val createdAt: String?
 )
 
 
 // ---------------------------------------------------------
-// PRODUCTO (MODELO DE DOMINIO USADO EN TU APP)
-// ---------------------------------------------------------
 data class Producto(
 
     @SerializedName("_id")
-    val id: String?,               // ID Mongo
+    val id: String?,
 
     @SerializedName("nombre")
-    val nombre: String,            // Nombre visible
+    val nombre: String,
 
     @SerializedName("descripcion")
-    val descripcion: String? = null,      // Descripción
+    val descripcion: String? = null,
 
     @SerializedName("talla")
-    val talla: String? = null,            // XS/S/M/L etc
+    val talla: String? = null,
 
     @SerializedName("material")
-    val material: String? = null,         // Algodón / Cuero / Mezclilla
+    val material: String? = null,
 
     @SerializedName("estilo")
-    val estilo: String? = null,           // Streetwear / Casual
+    val estilo: String? = null,
 
     @SerializedName("precio")
-    val precio: Double? = null,           // Precio
+    val precio: Double? = null,
 
-    // 👇 NUEVOS CAMPOS CON DEFAULT = null
+
     @SerializedName("categoria")
-    val categoria: String? = null,        // id de la categoría en Mongo
+    val categoria: String? = null,
 
     @SerializedName("tendencia")
     val tendencia: Boolean? = null,
@@ -84,14 +79,12 @@ data class Producto(
     val color: String? = null,
 
     @SerializedName("imagen")
-    val imagen: String? = null,           // Imagen principal
+    val imagen: String? = null,
 
     @SerializedName("imagenThumbnail")
-    val imagenThumbnail: String? = null   // Thumbnail
+    val imagenThumbnail: String? = null
 )
 
-// ---------------------------------------------------------
-// ITEM DEL CARRITO
 // ---------------------------------------------------------
 data class CartItem(
     val producto: Producto,
@@ -99,8 +92,6 @@ data class CartItem(
 )
 
 
-// ---------------------------------------------------------
-// API RESPONSE — Wrapper genérico del backend NestJS
 // ---------------------------------------------------------
 data class ApiResponse<T>(
     val success: Boolean,
