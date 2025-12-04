@@ -10,12 +10,32 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel de autenticación.
+ *
+ * Constructor PRINCIPAL (para tests):
+ *   - Recibe AuthRepository y SessionManager inyectados.
+ *
+ * Constructor SECUNDARIO (para la app en runtime):
+ *   - Crea SessionManager real y AuthRepository real.
+ */
+class AuthViewModel(
+    app: Application,
+    private val repo: AuthRepository,
+    private val session: SessionManager
+) : AndroidViewModel(app) {
 
-class AuthViewModel(app: Application) : AndroidViewModel(app) {
+    /**
+     * Constructor secundario usado por la APP en runtime.
+     * Aquí sí se crean el SessionManager real y el AuthRepository real.
+     */
+    constructor(app: Application) : this(
+        app,
+        AuthRepository(SessionManager(app.applicationContext)),
+        SessionManager(app.applicationContext)
+    )
 
-    private val session = SessionManager(app.applicationContext)
-    private val repo = AuthRepository(session)
-
+    // ----------------- UI STATE -----------------
     private val _ui = MutableStateFlow(AuthUiState())
     val ui: StateFlow<AuthUiState> = _ui
 
@@ -26,6 +46,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         session.saveAvatarUri(uri)
     }
 
+    // ----------------- ACCIONES -----------------
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
@@ -73,11 +94,9 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     }
 }
 
-
-
+// ----------------- UI STATE -----------------
 data class AuthUiState(
     val user: UserResponse? = null,
     val isLoading: Boolean = false,
     val error: String? = null
 )
-

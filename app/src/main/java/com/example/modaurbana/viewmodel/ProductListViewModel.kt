@@ -10,11 +10,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ProductListViewModel(app: Application) : AndroidViewModel(app) {
-
-    private val repo = ProductRepository(
+class ProductListViewModel(
+    app: Application,
+    // 🔹 inyectable para tests, con default para producción
+    private val repo: ProductRepository = ProductRepository(
         SessionManager(app.applicationContext)
     )
+) : AndroidViewModel(app) {
 
     private val _ui = MutableStateFlow(ProductListUiState())
     val ui: StateFlow<ProductListUiState> = _ui
@@ -31,9 +33,8 @@ class ProductListViewModel(app: Application) : AndroidViewModel(app) {
                     error = null
                 )
 
-                val productos = repo.getProductos()   // ← YA ENVÍA TOKEN
+                val productos = repo.getProductos()
 
-                // Sacamos tipos (a partir de categoria) y estilos disponibles
                 val tipos = productos
                     .mapNotNull { mapCategoriaToTipo(it.categoria) }
                     .distinct()
@@ -45,7 +46,7 @@ class ProductListViewModel(app: Application) : AndroidViewModel(app) {
                 _ui.value = _ui.value.copy(
                     isLoading = false,
                     productos = productos,
-                    productosFiltrados = productos,   // al inicio se muestran todos
+                    productosFiltrados = productos,
                     tiposDisponibles = tipos,
                     estilosDisponibles = estilos
                 )
@@ -58,10 +59,6 @@ class ProductListViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /**
-     * Mapea el id de categoria (String?) al "tipo de prenda"
-     * según los _id que tienes en la colección categorias.
-     */
     private fun mapCategoriaToTipo(categoriaId: String?): String? {
         return when (categoriaId) {
             "673000000000000000000001" -> "Hoodies"
@@ -73,9 +70,6 @@ class ProductListViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /**
-     * Aplica filtros por tipo de prenda y estilo.
-     */
     fun aplicarFiltros(
         tipoPrenda: String?,
         estilo: String?
@@ -96,6 +90,7 @@ class ProductListViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 }
+
 
 /**
  * UI State del catálogo.

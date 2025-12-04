@@ -103,8 +103,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 
     // Testing - Mockk
-    testImplementation("io.mockk:mockk:1.13.8")
-    testImplementation("io.mockk:mockk-android:1.13.8")
+    testImplementation("io.mockk:mockk:1.13.8")                  // unit tests
+    androidTestImplementation("io.mockk:mockk-android:1.13.8")   // androidTest
 
     // Testing - Turbine
     testImplementation("app.cash.turbine:turbine:1.0.0")

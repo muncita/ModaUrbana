@@ -9,9 +9,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class HomeViewModel(app: Application) : AndroidViewModel(app) {
-    private val session = SessionManager(app.applicationContext)
-    private val repo = UserRepository()
+class HomeViewModel(
+    app: Application,
+    private val session: SessionManager,
+    private val repo: UserRepository
+) : AndroidViewModel(app) {
+
+    // 👇 constructor que usa la app “de verdad”
+    constructor(app: Application) : this(
+        app,
+        SessionManager(app.applicationContext),
+        UserRepository()
+    )
 
     private val _username = MutableStateFlow("")
     val username: StateFlow<String> = _username

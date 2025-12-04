@@ -19,7 +19,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-//import androidx.compose.material3.ExposedDropdownMenu   // 👈 IMPORT CLAVE
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -453,7 +452,7 @@ private fun ProductCard(
             producto.precio?.let {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "$$it",
+                    text = "CLP $${"%,.0f".format(producto.precio ?: 0.0).replace(",", ".")}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
