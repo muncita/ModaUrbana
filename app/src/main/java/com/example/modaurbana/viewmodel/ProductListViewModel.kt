@@ -12,11 +12,17 @@ import kotlinx.coroutines.launch
 
 class ProductListViewModel(
     app: Application,
-    // 🔹 inyectable para tests, con default para producción
-    private val repo: ProductRepository = ProductRepository(
-        SessionManager(app.applicationContext)
-    )
+    // estos los podemos inyectar en tests si queremos
+    private val session: SessionManager,
+    private val repo: ProductRepository
 ) : AndroidViewModel(app) {
+
+    // 🔹 constructor que usa Android/Compose al llamar viewModel()
+    constructor(app: Application) : this(
+        app,
+        SessionManager(app.applicationContext),
+        ProductRepository(SessionManager(app.applicationContext))
+    )
 
     private val _ui = MutableStateFlow(ProductListUiState())
     val ui: StateFlow<ProductListUiState> = _ui
@@ -33,7 +39,7 @@ class ProductListViewModel(
                     error = null
                 )
 
-                val productos = repo.getProductos()
+                val productos = repo.getProductos()   // ← YA ENVÍA TOKEN
 
                 val tipos = productos
                     .mapNotNull { mapCategoriaToTipo(it.categoria) }
@@ -59,6 +65,10 @@ class ProductListViewModel(
         }
     }
 
+    /**
+     * Mapea el id de categoria (String?) al "tipo de prenda"
+     * según los _id que tienes en la colección categorias.
+     */
     private fun mapCategoriaToTipo(categoriaId: String?): String? {
         return when (categoriaId) {
             "673000000000000000000001" -> "Hoodies"
@@ -70,6 +80,9 @@ class ProductListViewModel(
         }
     }
 
+    /**
+     * Aplica filtros por tipo de prenda y estilo.
+     */
     fun aplicarFiltros(
         tipoPrenda: String?,
         estilo: String?
@@ -91,12 +104,8 @@ class ProductListViewModel(
     }
 }
 
-
 /**
  * UI State del catálogo.
- * Ya no usamos talla/material, solo:
- * - tipo de prenda
- * - estilo
  */
 data class ProductListUiState(
     val isLoading: Boolean = false,
@@ -104,11 +113,9 @@ data class ProductListUiState(
     val productosFiltrados: List<Producto> = emptyList(),
     val error: String? = null,
 
-    // Tipos de prenda (Hoodies, Poleras, etc.)
     val tiposDisponibles: List<String> = emptyList(),
     val tipoSeleccionado: String? = null,
 
-    // Estilos (Streetwear, Minimalista, etc.)
     val estilosDisponibles: List<String> = emptyList(),
     val estiloSeleccionado: String? = null
 )
