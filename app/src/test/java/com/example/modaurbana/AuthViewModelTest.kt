@@ -37,7 +37,6 @@ class AuthViewModelTest {
         val app = mockk<Application>(relaxed = true)
         viewModel = AuthViewModel(app)
 
-        // 👉 Inyectamos el repo mock dentro del ViewModel usando reflexión
         repo = mockk(relaxed = true)
         val repoField = AuthViewModel::class.java.getDeclaredField("repo")
         repoField.isAccessible = true
@@ -49,9 +48,6 @@ class AuthViewModelTest {
         Dispatchers.resetMain()
     }
 
-    // ---------------------------------------------------------------------
-    // LOGIN ÉXITOSO
-    // ---------------------------------------------------------------------
     @Test
     fun `login exitoso actualiza uiState con usuario`() = runTest {
         val fakeUser = UserResponse(
@@ -66,15 +62,10 @@ class AuthViewModelTest {
         coEvery { repo.login("pepita@test.com", "1234") } returns fakeUser
 
         viewModel.ui.test {
-            // 1) Estado inicial
             val initial = awaitItem()
             assertNull(initial.user)
             assertNull(initial.error)
-
-            // 2) Ejecutamos login
             viewModel.login("pepita@test.com", "1234")
-
-            // 3) Siguiente emisión = éxito
             val final = awaitItem()
             assertEquals("Pepita", final.user?.name)
             assertEquals("pepita@test.com", final.user?.email)
@@ -86,9 +77,6 @@ class AuthViewModelTest {
         coVerify(exactly = 1) { repo.login("pepita@test.com", "1234") }
     }
 
-    // ---------------------------------------------------------------------
-    // LOGIN CON ERROR
-    // ---------------------------------------------------------------------
     @Test
     fun `login con error muestra mensaje de error`() = runTest {
         coEvery { repo.login(any(), any()) } throws Exception("Credenciales inválidas")
@@ -107,9 +95,6 @@ class AuthViewModelTest {
         }
     }
 
-    // ---------------------------------------------------------------------
-    // REGISTER ÉXITOSO
-    // ---------------------------------------------------------------------
     @Test
     fun `register exitoso guarda usuario en uiState`() = runTest {
         val newUser = UserResponse(
@@ -140,9 +125,6 @@ class AuthViewModelTest {
         coVerify(exactly = 1) { repo.register("Nuevo User", "nuevo@test.com", "abcd") }
     }
 
-    // ---------------------------------------------------------------------
-    // REGISTER CON ERROR
-    // ---------------------------------------------------------------------
     @Test
     fun `register con error devuelve mensaje de error`() = runTest {
         coEvery { repo.register(any(), any(), any()) } throws Exception("Email ya registrado")

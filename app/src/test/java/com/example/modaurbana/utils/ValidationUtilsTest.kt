@@ -23,13 +23,8 @@ class ValidationUtilsTest {
 
     @Test
     fun `isValidPassword e isNotBlank funcionan correctamente`() {
-        // Password válido
         assertTrue(ValidationUtils.isValidPassword("123456"))
-
-        // Password muy corto
         assertFalse(ValidationUtils.isValidPassword("123"))
-
-        // isNotBlank
         assertTrue(ValidationUtils.isNotBlank(" hola "))
         assertFalse(ValidationUtils.isNotBlank("   "))
     }

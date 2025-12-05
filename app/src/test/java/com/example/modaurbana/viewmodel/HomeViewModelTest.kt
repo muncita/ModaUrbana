@@ -37,7 +37,6 @@ class HomeViewModelTest {
         session = mockk(relaxed = true)
         repo = mockk()
 
-        // Usamos el constructor de pruebas de HomeViewModel
         viewModel = HomeViewModel(app, session, repo)
     }
 
@@ -46,59 +45,37 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    // -----------------------------------------------------------
-    // 1) Con token: usa repo y expone nombre del usuario
-    // -----------------------------------------------------------
     @Test
     fun `loadUser con token usa repo y expone nombre`() = runTest {
-        // GIVEN
         coEvery { session.getAuthToken() } returns "jwt-123"
         coEvery { repo.getCurrentUser("jwt-123") } returns fakeUserDto("Monse")
-
-        // WHEN
         viewModel.loadUser()
         advanceUntilIdle()
-
-        // THEN
         assertEquals("Monse", viewModel.username.value)
         coVerify(exactly = 1) { repo.getCurrentUser("jwt-123") }
     }
 
-    // -----------------------------------------------------------
-    // 2) Sin token: pone Invitado y NO llama al repo
-    // -----------------------------------------------------------
     @Test
     fun `loadUser sin token pone Invitado y no llama repo`() = runTest {
-        // GIVEN
         coEvery { session.getAuthToken() } returns null
 
-        // WHEN
         viewModel.loadUser()
         advanceUntilIdle()
-
-        // THEN
         assertEquals("Invitado", viewModel.username.value)
         coVerify(exactly = 0) { repo.getCurrentUser(any()) }
     }
 
-    // -----------------------------------------------------------
-    // 3) Error en repo: expone mensaje de error
-    // -----------------------------------------------------------
     @Test
     fun `loadUser con error en repo expone mensaje de error`() = runTest {
-        // GIVEN
         coEvery { session.getAuthToken() } returns "jwt-123"
         coEvery { repo.getCurrentUser("jwt-123") } throws RuntimeException("Fallo API")
 
-        // WHEN
         viewModel.loadUser()
         advanceUntilIdle()
 
-        // THEN
         assertEquals("Error: Fallo API", viewModel.username.value)
     }
 
-    // Helper para crear un UserResponseDto falso
     private fun fakeUserDto(nombre: String): UserResponseDto =
         UserResponseDto(
             id = "1",

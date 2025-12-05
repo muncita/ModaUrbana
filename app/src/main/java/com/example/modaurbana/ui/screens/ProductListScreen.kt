@@ -100,23 +100,16 @@ fun ProductListScreen(
     val cartUi by cartViewModel.ui.collectAsState()
     val totalItems = cartUi.items.sumOf { it.quantity }
 
-    // 🔍 estado de la barra de búsqueda
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    // Logo centrado, estilo Nube/HumanMob
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_modaurbana_logo),
-                            contentDescription = "Logo ModaUrbana",
-                            modifier = Modifier.height(28.dp)
-                        )
                     }
                 },
                 actions = {
@@ -173,7 +166,6 @@ fun ProductListScreen(
                 }
 
                 else -> {
-                    // Filtrado por búsqueda sobre los productos ya filtrados por tipo/estilo
                     val productosMostrados = remember(ui.productosFiltrados, searchQuery) {
                         if (searchQuery.isBlank()) {
                             ui.productosFiltrados
@@ -189,7 +181,6 @@ fun ProductListScreen(
                             .fillMaxSize()
                             .padding(16.dp)
                     ) {
-                        // 🔍 Barra de búsqueda
                         SearchBarCatalogo(
                             query = searchQuery,
                             onQueryChange = { searchQuery = it }
@@ -197,7 +188,6 @@ fun ProductListScreen(
 
                         Spacer(Modifier.height(12.dp))
 
-                        // Filtros por tipo / estilo en horizontal
                         FiltrosProductos(
                             ui = ui,
                             onChange = { tipo, estilo ->
@@ -257,7 +247,6 @@ private fun FiltrosProductos(
     var estiloExpanded by remember { mutableStateOf(false) }
 
     Column {
-        // Encabezado similar a “FILTRAR / ORDENAR”
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -269,7 +258,6 @@ private fun FiltrosProductos(
                 style = MaterialTheme.typography.bodyMedium
             )
             TextButton(onClick = {
-                // limpiar filtros
                 onChange(null, null)
             }) {
                 Text("Limpiar filtros")
@@ -278,12 +266,10 @@ private fun FiltrosProductos(
 
         Spacer(Modifier.height(8.dp))
 
-        // Fila con dos dropdowns lado a lado
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // 🔹 TIPO DE PRENDA
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -328,7 +314,6 @@ private fun FiltrosProductos(
                 }
             }
 
-            // 🔹 ESTILO
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -422,7 +407,6 @@ private fun ProductCard(
         Column(
             modifier = Modifier.padding(8.dp)
         ) {
-            // Imagen del producto
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

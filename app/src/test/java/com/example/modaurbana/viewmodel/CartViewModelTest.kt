@@ -6,7 +6,6 @@ import org.junit.Test
 
 class CartViewModelTest {
 
-    // Helper para crear productos de prueba
     private fun fakeProducto(
         id: String = "prod-1",
         nombre: String = "Producto 1",
@@ -21,19 +20,16 @@ class CartViewModelTest {
 
     @Test
     fun `addToCart agrega producto nuevo con cantidad 1 y total correcto`() {
-        // GIVEN
         val vm = CartViewModel()
         val producto = fakeProducto(id = "prod-1", precio = 10000.0)
 
-        // WHEN
         vm.addToCart(producto)
 
-        // THEN
         val ui = vm.ui.value
 
-        assertEquals(1, ui.items.size)               // hay 1 item
-        assertEquals(1, ui.items[0].quantity)        // cantidad = 1
-        assertEquals(10000.0, ui.total, 0.001)  // total = 10000
+        assertEquals(1, ui.items.size)
+        assertEquals(1, ui.items[0].quantity)
+        assertEquals(10000.0, ui.total, 0.001)
     }
 
     @Test
