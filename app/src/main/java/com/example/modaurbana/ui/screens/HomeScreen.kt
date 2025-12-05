@@ -82,13 +82,8 @@ private fun HomeTopBar() {
 
         Spacer(Modifier.weight(1f))
 
-        // Logo centrado
-        Image(
-            painter = painterResource(id = R.drawable.ic_modaurbana_logo),
-            contentDescription = "Logo ModaUrbana",
-            modifier = Modifier
-                .height(60.dp)
-        )
+
+
 
         Spacer(Modifier.weight(1f))
 
@@ -135,14 +130,8 @@ private fun HomeContent(
                 .clip(RoundedCornerShape(24.dp))
                 .height(340.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.img_home_hero),
-                contentDescription = "Nueva colección ModaUrbana",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
 
-            // Texto superpuesto abajo
+
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -175,12 +164,6 @@ private fun HomeContent(
                 .clip(RoundedCornerShape(24.dp))
                 .height(260.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.img_story_blond),
-                contentDescription = "Historia ModaUrbana",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
 
             // 🟣 Overlay suave
             Box(
