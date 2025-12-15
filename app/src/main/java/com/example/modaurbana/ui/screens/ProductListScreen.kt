@@ -1,6 +1,7 @@
 package com.example.modaurbana.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -9,26 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -47,44 +29,6 @@ import com.example.modaurbana.viewmodel.CartViewModel
 import com.example.modaurbana.viewmodel.ProductListUiState
 import com.example.modaurbana.viewmodel.ProductListViewModel
 import kotlinx.coroutines.launch
-
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
-import com.example.modaurbana.R
-import kotlinx.coroutines.launch
-
-
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,21 +49,13 @@ fun ProductListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                    }
-                },
+                title = {},
                 actions = {
                     IconButton(onClick = { navController.navigate(Route.Cart.route) }) {
                         BadgedBox(
                             badge = {
                                 if (totalItems > 0) {
-                                    Badge {
-                                        Text(totalItems.toString())
-                                    }
+                                    Badge { Text(totalItems.toString()) }
                                 }
                             }
                         ) {
@@ -132,13 +68,15 @@ fun ProductListScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
+
         Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
+
             when {
                 ui.isLoading -> {
                     Box(
@@ -170,8 +108,8 @@ fun ProductListScreen(
                         if (searchQuery.isBlank()) {
                             ui.productosFiltrados
                         } else {
-                            ui.productosFiltrados.filter { producto ->
-                                producto.nombre.contains(searchQuery, ignoreCase = true)
+                            ui.productosFiltrados.filter {
+                                it.nombre.contains(searchQuery, ignoreCase = true)
                             }
                         }
                     }
@@ -181,6 +119,7 @@ fun ProductListScreen(
                             .fillMaxSize()
                             .padding(16.dp)
                     ) {
+
                         SearchBarCatalogo(
                             query = searchQuery,
                             onQueryChange = { searchQuery = it }
@@ -202,11 +141,13 @@ fun ProductListScreen(
                             onAgregarAlCarrito = { producto ->
                                 cartViewModel.addToCart(producto)
                                 scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        message = "Producto agregado al carrito",
-                                        withDismissAction = false
-                                    )
+                                    snackbarHostState.showSnackbar("Producto agregado al carrito")
                                 }
+                            },
+                            onOpenDetail = { productId ->
+                                navController.navigate(
+                                    Route.ProductDetail.createRoute(productId)
+                                )
                             }
                         )
                     }
@@ -257,9 +198,7 @@ private fun FiltrosProductos(
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyMedium
             )
-            TextButton(onClick = {
-                onChange(null, null)
-            }) {
+            TextButton(onClick = { onChange(null, null) }) {
                 Text("Limpiar filtros")
             }
         }
@@ -270,10 +209,7 @@ private fun FiltrosProductos(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-            ) {
+            Box(Modifier.weight(1f)) {
                 ExposedDropdownMenuBox(
                     expanded = tipoExpanded,
                     onExpandedChange = { tipoExpanded = !tipoExpanded }
@@ -314,10 +250,7 @@ private fun FiltrosProductos(
                 }
             }
 
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-            ) {
+            Box(Modifier.weight(1f)) {
                 ExposedDropdownMenuBox(
                     expanded = estiloExpanded,
                     onExpandedChange = { estiloExpanded = !estiloExpanded }
@@ -364,7 +297,8 @@ private fun FiltrosProductos(
 @Composable
 private fun ListaProductos(
     productos: List<Producto>,
-    onAgregarAlCarrito: (Producto) -> Unit
+    onAgregarAlCarrito: (Producto) -> Unit,
+    onOpenDetail: (String) -> Unit
 ) {
     if (productos.isEmpty()) {
         Box(
@@ -384,7 +318,8 @@ private fun ListaProductos(
             items(productos) { producto ->
                 ProductCard(
                     producto = producto,
-                    onAgregarAlCarrito = onAgregarAlCarrito
+                    onAgregarAlCarrito = onAgregarAlCarrito,
+                    onOpenDetail = onOpenDetail
                 )
             }
         }
@@ -394,19 +329,23 @@ private fun ListaProductos(
 @Composable
 private fun ProductCard(
     producto: Producto,
-    onAgregarAlCarrito: (Producto) -> Unit
+    onAgregarAlCarrito: (Producto) -> Unit,
+    onOpenDetail: (String) -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = producto.id != null) {
+                producto.id?.let { onOpenDetail(it) }
+            },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
-        ) {
+        Column(modifier = Modifier.padding(8.dp)) {
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -414,7 +353,7 @@ private fun ProductCard(
                     .clip(RoundedCornerShape(12.dp))
             ) {
                 AsyncImage(
-                    model = producto.imagen,
+                    model = producto.imagenThumbnail ?: producto.imagen,
                     contentDescription = producto.nombre,
                     modifier = Modifier
                         .fillMaxSize()
@@ -436,7 +375,7 @@ private fun ProductCard(
             producto.precio?.let {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "CLP $${"%,.0f".format(producto.precio ?: 0.0).replace(",", ".")}",
+                    text = "CLP $${"%,.0f".format(it).replace(",", ".")}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
